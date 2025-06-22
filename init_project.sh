@@ -64,25 +64,6 @@ show_help() {
     echo "  --interactive, -i   Interactive mode for guided setup"
     echo "  --help, -h          Show this help message"
     echo ""
-    echo "Templates:"
-    echo "  saas                SaaS application with auth, billing, user management"
-    echo "  ecommerce           E-commerce platform with products, cart, payments"
-    echo "  api                 API service with documentation and testing"
-    echo "  dashboard           Admin dashboard with analytics and user management"
-    echo "  mobile              Mobile app backend with push notifications"
-    echo ""
-    echo "Environments:"
-    echo "  development         Local development setup with hot reloading"
-    echo "  staging            Pre-production environment for testing"
-    echo "  production         Production-ready configuration"
-    echo ""
-    echo "Examples:"
-    echo "  $0                                    # Use defaults"
-    echo "  $0 --name my-app --frontend vue      # Custom project"
-    echo "  $0 --template saas                   # SaaS template"
-    echo "  $0 --environment production          # Production setup"
-    echo "  $0 --interactive                     # Guided setup"
-    echo ""
 }
 
 # Function to validate tech stack choices
@@ -653,7 +634,10 @@ case $BACKEND_FRAMEWORK in
     "nodemon": "^3.0.2",
     "jest": "^29.7.0",
     "eslint": "^8.55.0"
-  }
+  },
+  "keywords": ["api", "backend", "express", "nodejs"],
+  "author": "Your Team",
+  "license": "MIT"
 }
 EOF
         ;;
@@ -2504,9 +2488,12 @@ echo -e "   ${GREEN}📚 Review .github/workflows/ for GitHub Actions${NC}"
 echo -e "   ${GREEN}🔐 Set up repository secrets for deployment${NC}"
 echo -e "   ${GREEN}📖 Check docs/ci-cd/README.md for setup guide${NC}"
 echo ""
+echo -e "${YELLOW}7.${NC} (Optional) Generate documentation templates:"
+echo -e "   ${GREEN}./create_docs.sh -p $PROJECT_NAME -e $ENVIRONMENT -f $FRONTEND_FRAMEWORK -b $BACKEND_FRAMEWORK -d $DATABASE${NC}"
+echo ""
 echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for $ENVIRONMENT!${NC}"
 echo ""
-echo -e "${YELLOW}📚 Check the docs/ directory for detailed guides.${NC}"
+echo -e "${YELLOW}📚 Check the docs/ directory for detailed guides (if you generated documentation).${NC}"
 echo -e "${YELLOW}🌍 Environment: $ENVIRONMENT configuration applied.${NC}"
 echo -e "${YELLOW}🚀 Quick start: ./scripts/start-${ENVIRONMENT}.sh local${NC}"
 echo -e "${YELLOW}🔧 CI/CD: GitHub Actions workflows configured for $ENVIRONMENT${NC}"
