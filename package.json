@@ -21,7 +21,9 @@
   "license": "MIT",
   "devDependencies": {
     "husky": "^8.0.3",
-    "lint-staged": "^15.2.0"
+    "lint-staged": "^15.2.0",
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -35,5 +37,8 @@
     "*.{md,json,yml,yaml}": [
       "npm run format"
     ]
+  },
+  "commitlint": {
+    "extends": ["@commitlint/config-conventional"]
   }
 } 
