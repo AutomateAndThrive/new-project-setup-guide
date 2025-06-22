@@ -19,12 +19,12 @@ This document tracks the implementation of our MVP setup for solo developers and
 
 #### **1.1 Automated Code Quality Setup**
 
-- [ ] Add **Husky** configuration for pre-commit hooks
-- [ ] Add **lint-staged** configuration to run checks on staged files only
-- [ ] Add **Commitlint** to enforce Conventional Commits
-- [ ] Configure **ESLint** with strict rules for both frontend and backend
-- [ ] Configure **Prettier** for consistent code formatting
-- [ ] Add **TypeScript strict mode** configuration
+- [x] Add **Husky** configuration for pre-commit hooks
+- [x] Add **lint-staged** configuration to run checks on staged files only
+- [x] Add **Commitlint** to enforce Conventional Commits
+- [x] Configure **ESLint** with strict rules for both frontend and backend
+- [x] Configure **Prettier** for consistent code formatting
+- [x] Add **TypeScript strict mode** configuration
 - [ ] Set up **Jest** for backend testing
 - [ ] Set up **Vitest** for frontend testing
 - [ ] Add **code coverage** requirements (80% minimum)

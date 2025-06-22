@@ -75,3 +75,32 @@ export const safeTransform = <T, U>(data: T, transformFn: TransformFunction<T, U
 export const generateId = (): string => {
   return `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
+
+/**
+ * Formats a date to YYYY-MM-DD format
+ * Demonstrates date handling and string formatting
+ */
+export const formatDate = (date: Date): string => {
+  if (isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
+  return date.toISOString().split('T')[0];
+};
+
+/**
+ * Validates email format using regex
+ * Shows string validation and regex usage
+ */
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+/**
+ * Calculates percentage with proper rounding
+ * Demonstrates mathematical operations and precision handling
+ */
+export const calculatePercentage = (value: number, total: number): number => {
+  if (total === 0) return 0;
+  return Math.round((value / total) * 100 * 100) / 100;
+};
