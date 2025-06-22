@@ -30,7 +30,10 @@
     "ci:lint": "npm run lint && npm run format:check",
     "ci:build": "npm run build",
     "ci:security": "npm audit --audit-level=moderate",
-    "ci:full": "npm run ci:lint && npm run ci:test && npm run ci:build && npm run ci:security"
+    "ci:full": "npm run ci:lint && npm run ci:test && npm run ci:build && npm run ci:security",
+    "docs:generate": "typedoc",
+    "docs:serve": "typedoc --serve",
+    "docs:watch": "typedoc --watch"
   },
   "keywords": [
     "project-setup",
@@ -59,6 +62,8 @@
     "prettier": "^3.2.5",
     "snyk": "^1.1260.0",
     "ts-jest": "^29.4.0",
+    "typedoc": "^0.28.5",
+    "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "5.3.3",
     "vitest": "^3.2.4"
   },

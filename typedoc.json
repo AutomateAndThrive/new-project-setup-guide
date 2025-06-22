@@ -1,0 +1,27 @@
+{
+  "entryPoints": ["src/**/*.ts"],
+  "out": "docs/api",
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "theme": "default",
+  "name": "New Project Setup Guide API",
+  "readme": "README.md",
+  "categorizeByGroup": true,
+  "categoryOrder": ["Utilities", "Types", "Examples", "*"],
+  "sort": ["source-order"],
+  "searchInComments": true,
+  "validation": {
+    "invalidLink": true,
+    "notExported": true
+  },
+  "gitRevision": "main",
+  "gitRemote": "origin",
+  "excludeNotDocumented": false,
+  "excludeNotDocumentedKinds": ["Module"],
+  "plugin": ["typedoc-plugin-markdown"],
+  "hideGenerator": true,
+  "cleanOutputDir": true
+}
