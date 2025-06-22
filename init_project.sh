@@ -18,6 +18,7 @@
 #   --backend, -b       Backend framework (node, python, dotnet, java)
 #   --database, -db     Database (postgresql, mysql, mongodb, sqlite)
 #   --deployment, -dep  Deployment (docker, kubernetes, serverless)
+#   --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)
 #   --interactive, -i   Interactive mode for guided setup
 #   --help, -h          Show this help message
 # ==============================================================================
@@ -40,6 +41,7 @@ FRONTEND_FRAMEWORK="react"
 BACKEND_FRAMEWORK="node"
 DATABASE="postgresql"
 DEPLOYMENT="docker"
+PROJECT_TEMPLATE=""
 INTERACTIVE_MODE=false
 
 # Function to show help
@@ -55,12 +57,21 @@ show_help() {
     echo "  --backend, -b       Backend framework (node, python, dotnet, java)"
     echo "  --database, -db     Database (postgresql, mysql, mongodb, sqlite)"
     echo "  --deployment, -dep  Deployment (docker, kubernetes, serverless)"
+    echo "  --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)"
     echo "  --interactive, -i   Interactive mode for guided setup"
     echo "  --help, -h          Show this help message"
+    echo ""
+    echo "Templates:"
+    echo "  saas                SaaS application with auth, billing, user management"
+    echo "  ecommerce           E-commerce platform with products, cart, payments"
+    echo "  api                 API service with documentation and testing"
+    echo "  dashboard           Admin dashboard with analytics and user management"
+    echo "  mobile              Mobile app backend with push notifications"
     echo ""
     echo "Examples:"
     echo "  $0                                    # Use defaults"
     echo "  $0 --name my-app --frontend vue      # Custom project"
+    echo "  $0 --template saas                   # SaaS template"
     echo "  $0 --interactive                     # Guided setup"
     echo ""
 }
@@ -78,6 +89,54 @@ validate_choice() {
     fi
 }
 
+# Function to apply template configuration
+apply_template() {
+    local template="$1"
+    
+    case $template in
+        "saas")
+            PROJECT_DESCRIPTION="A SaaS application with user authentication, billing, and subscription management"
+            FRONTEND_FRAMEWORK="react"
+            BACKEND_FRAMEWORK="node"
+            DATABASE="postgresql"
+            DEPLOYMENT="docker"
+            echo -e "${GREEN}✅ Applied SaaS template${NC}"
+            ;;
+        "ecommerce")
+            PROJECT_DESCRIPTION="An e-commerce platform with product catalog, shopping cart, and payment processing"
+            FRONTEND_FRAMEWORK="nextjs"
+            BACKEND_FRAMEWORK="node"
+            DATABASE="postgresql"
+            DEPLOYMENT="docker"
+            echo -e "${GREEN}✅ Applied E-commerce template${NC}"
+            ;;
+        "api")
+            PROJECT_DESCRIPTION="A RESTful API service with comprehensive documentation and testing"
+            FRONTEND_FRAMEWORK=""
+            BACKEND_FRAMEWORK="node"
+            DATABASE="postgresql"
+            DEPLOYMENT="docker"
+            echo -e "${GREEN}✅ Applied API template${NC}"
+            ;;
+        "dashboard")
+            PROJECT_DESCRIPTION="An admin dashboard with analytics, user management, and reporting"
+            FRONTEND_FRAMEWORK="react"
+            BACKEND_FRAMEWORK="node"
+            DATABASE="postgresql"
+            DEPLOYMENT="docker"
+            echo -e "${GREEN}✅ Applied Dashboard template${NC}"
+            ;;
+        "mobile")
+            PROJECT_DESCRIPTION="A mobile app backend with user management and push notifications"
+            FRONTEND_FRAMEWORK=""
+            BACKEND_FRAMEWORK="node"
+            DATABASE="mongodb"
+            DEPLOYMENT="serverless"
+            echo -e "${GREEN}✅ Applied Mobile Backend template${NC}"
+            ;;
+    esac
+}
+
 # Function for interactive setup
 interactive_setup() {
     echo -e "${CYAN}🎯 Interactive Project Setup${NC}"
@@ -88,67 +147,113 @@ interactive_setup() {
     read -p "Project name [my-project]: " input_name
     PROJECT_NAME=${input_name:-"my-project"}
     
-    # Project description
-    read -p "Project description [A modern web application]: " input_desc
-    PROJECT_DESCRIPTION=${input_desc:-"A modern web application"}
+    # Project template selection
+    echo -e "${YELLOW}Project templates:${NC}"
+    echo "1) Custom project (choose your own tech stack)"
+    echo "2) SaaS application (React + Node.js + PostgreSQL)"
+    echo "3) E-commerce platform (Next.js + Node.js + PostgreSQL)"
+    echo "4) API service (Node.js + PostgreSQL, no frontend)"
+    echo "5) Admin dashboard (React + Node.js + PostgreSQL)"
+    echo "6) Mobile backend (Node.js + MongoDB + Serverless)"
+    read -p "Choose project template [1]: " template_choice
     
-    # Frontend framework
-    echo -e "${YELLOW}Frontend frameworks:${NC}"
-    echo "1) React (recommended)"
-    echo "2) Vue"
-    echo "3) Angular"
-    echo "4) Next.js"
-    read -p "Choose frontend framework [1]: " frontend_choice
-    case ${frontend_choice:-1} in
-        1) FRONTEND_FRAMEWORK="react" ;;
-        2) FRONTEND_FRAMEWORK="vue" ;;
-        3) FRONTEND_FRAMEWORK="angular" ;;
-        4) FRONTEND_FRAMEWORK="nextjs" ;;
-        *) FRONTEND_FRAMEWORK="react" ;;
+    case ${template_choice:-1} in
+        1) 
+            PROJECT_TEMPLATE=""
+            PROJECT_DESCRIPTION="A modern web application"
+            ;;
+        2) 
+            PROJECT_TEMPLATE="saas"
+            apply_template "saas"
+            ;;
+        3) 
+            PROJECT_TEMPLATE="ecommerce"
+            apply_template "ecommerce"
+            ;;
+        4) 
+            PROJECT_TEMPLATE="api"
+            apply_template "api"
+            ;;
+        5) 
+            PROJECT_TEMPLATE="dashboard"
+            apply_template "dashboard"
+            ;;
+        6) 
+            PROJECT_TEMPLATE="mobile"
+            apply_template "mobile"
+            ;;
+        *) 
+            PROJECT_TEMPLATE=""
+            PROJECT_DESCRIPTION="A modern web application"
+            ;;
     esac
     
-    # Backend framework
-    echo -e "${YELLOW}Backend frameworks:${NC}"
-    echo "1) Node.js (recommended)"
-    echo "2) Python/FastAPI"
-    echo "3) .NET"
-    echo "4) Java/Spring"
-    read -p "Choose backend framework [1]: " backend_choice
-    case ${backend_choice:-1} in
-        1) BACKEND_FRAMEWORK="node" ;;
-        2) BACKEND_FRAMEWORK="python" ;;
-        3) BACKEND_FRAMEWORK="dotnet" ;;
-        4) BACKEND_FRAMEWORK="java" ;;
-        *) BACKEND_FRAMEWORK="node" ;;
-    esac
-    
-    # Database
-    echo -e "${YELLOW}Databases:${NC}"
-    echo "1) PostgreSQL (recommended)"
-    echo "2) MySQL"
-    echo "3) MongoDB"
-    echo "4) SQLite"
-    read -p "Choose database [1]: " db_choice
-    case ${db_choice:-1} in
-        1) DATABASE="postgresql" ;;
-        2) DATABASE="mysql" ;;
-        3) DATABASE="mongodb" ;;
-        4) DATABASE="sqlite" ;;
-        *) DATABASE="postgresql" ;;
-    esac
-    
-    # Deployment
-    echo -e "${YELLOW}Deployment options:${NC}"
-    echo "1) Docker (recommended)"
-    echo "2) Kubernetes"
-    echo "3) Serverless"
-    read -p "Choose deployment [1]: " dep_choice
-    case ${dep_choice:-1} in
-        1) DEPLOYMENT="docker" ;;
-        2) DEPLOYMENT="kubernetes" ;;
-        3) DEPLOYMENT="serverless" ;;
-        *) DEPLOYMENT="docker" ;;
-    esac
+    # If custom project or template needs customization
+    if [ -z "$PROJECT_TEMPLATE" ] || [ "$template_choice" = "1" ]; then
+        # Project description
+        read -p "Project description [$PROJECT_DESCRIPTION]: " input_desc
+        PROJECT_DESCRIPTION=${input_desc:-"$PROJECT_DESCRIPTION"}
+        
+        # Frontend framework (skip if API or mobile template)
+        if [ -n "$FRONTEND_FRAMEWORK" ]; then
+            echo -e "${YELLOW}Frontend frameworks:${NC}"
+            echo "1) React (recommended)"
+            echo "2) Vue"
+            echo "3) Angular"
+            echo "4) Next.js"
+            read -p "Choose frontend framework [1]: " frontend_choice
+            case ${frontend_choice:-1} in
+                1) FRONTEND_FRAMEWORK="react" ;;
+                2) FRONTEND_FRAMEWORK="vue" ;;
+                3) FRONTEND_FRAMEWORK="angular" ;;
+                4) FRONTEND_FRAMEWORK="nextjs" ;;
+                *) FRONTEND_FRAMEWORK="react" ;;
+            esac
+        fi
+        
+        # Backend framework
+        echo -e "${YELLOW}Backend frameworks:${NC}"
+        echo "1) Node.js (recommended)"
+        echo "2) Python/FastAPI"
+        echo "3) .NET"
+        echo "4) Java/Spring"
+        read -p "Choose backend framework [1]: " backend_choice
+        case ${backend_choice:-1} in
+            1) BACKEND_FRAMEWORK="node" ;;
+            2) BACKEND_FRAMEWORK="python" ;;
+            3) BACKEND_FRAMEWORK="dotnet" ;;
+            4) BACKEND_FRAMEWORK="java" ;;
+            *) BACKEND_FRAMEWORK="node" ;;
+        esac
+        
+        # Database
+        echo -e "${YELLOW}Databases:${NC}"
+        echo "1) PostgreSQL (recommended)"
+        echo "2) MySQL"
+        echo "3) MongoDB"
+        echo "4) SQLite"
+        read -p "Choose database [1]: " db_choice
+        case ${db_choice:-1} in
+            1) DATABASE="postgresql" ;;
+            2) DATABASE="mysql" ;;
+            3) DATABASE="mongodb" ;;
+            4) DATABASE="sqlite" ;;
+            *) DATABASE="postgresql" ;;
+        esac
+        
+        # Deployment
+        echo -e "${YELLOW}Deployment options:${NC}"
+        echo "1) Docker (recommended)"
+        echo "2) Kubernetes"
+        echo "3) Serverless"
+        read -p "Choose deployment [1]: " dep_choice
+        case ${dep_choice:-1} in
+            1) DEPLOYMENT="docker" ;;
+            2) DEPLOYMENT="kubernetes" ;;
+            3) DEPLOYMENT="serverless" ;;
+            *) DEPLOYMENT="docker" ;;
+        esac
+    fi
     
     echo ""
     echo -e "${GREEN}✅ Configuration complete!${NC}"
@@ -184,6 +289,12 @@ while [[ $# -gt 0 ]]; do
         --deployment|-dep)
             DEPLOYMENT="$2"
             validate_choice "$DEPLOYMENT" "docker kubernetes serverless" "deployment"
+            shift 2
+            ;;
+        --template|-t)
+            PROJECT_TEMPLATE="$2"
+            validate_choice "$PROJECT_TEMPLATE" "saas ecommerce api dashboard mobile" "project template"
+            apply_template "$PROJECT_TEMPLATE"
             shift 2
             ;;
         --interactive|-i)
@@ -231,39 +342,44 @@ mkdir -p "$PROJECT_NAME"
 cd "$PROJECT_NAME"
 
 # Create main project structure
-mkdir -p {frontend,backend,docs,scripts,tests,assets}
+mkdir -p {backend,docs,scripts,tests,assets}
 
-# Create frontend structure based on framework
-echo -e "${BLUE}📁 Creating frontend structure for $FRONTEND_FRAMEWORK...${NC}"
-case $FRONTEND_FRAMEWORK in
-    "react")
-        mkdir -p frontend/{src/{components,pages,hooks,utils,services,types,assets},public}
-        mkdir -p frontend/src/components/{ui,layout,forms}
-        mkdir -p frontend/src/pages/{home,about,contact}
-        mkdir -p frontend/src/services/{api,auth}
-        mkdir -p frontend/src/types/{api,ui}
-        ;;
-    "vue")
-        mkdir -p frontend/{src/{components,views,composables,utils,services,types,assets},public}
-        mkdir -p frontend/src/components/{ui,layout,forms}
-        mkdir -p frontend/src/views/{home,about,contact}
-        mkdir -p frontend/src/services/{api,auth}
-        mkdir -p frontend/src/types/{api,ui}
-        ;;
-    "angular")
-        mkdir -p frontend/{src/{app/{components,pages,services,models,guards},assets,environments},public}
-        mkdir -p frontend/src/app/components/{ui,layout,forms}
-        mkdir -p frontend/src/app/pages/{home,about,contact}
-        mkdir -p frontend/src/app/services/{api,auth}
-        mkdir -p frontend/src/app/models/{api,ui}
-        ;;
-    "nextjs")
-        mkdir -p frontend/{src/{app,components,lib,types,styles},public}
-        mkdir -p frontend/src/components/{ui,layout,forms}
-        mkdir -p frontend/src/lib/{api,auth}
-        mkdir -p frontend/src/types/{api,ui}
-        ;;
-esac
+# Create frontend structure only if needed
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    mkdir -p frontend
+    echo -e "${BLUE}📁 Creating frontend structure for $FRONTEND_FRAMEWORK...${NC}"
+    case $FRONTEND_FRAMEWORK in
+        "react")
+            mkdir -p frontend/{src/{components,pages,hooks,utils,services,types,assets},public}
+            mkdir -p frontend/src/components/{ui,layout,forms}
+            mkdir -p frontend/src/pages/{home,about,contact}
+            mkdir -p frontend/src/services/{api,auth}
+            mkdir -p frontend/src/types/{api,ui}
+            ;;
+        "vue")
+            mkdir -p frontend/{src/{components,views,composables,utils,services,types,assets},public}
+            mkdir -p frontend/src/components/{ui,layout,forms}
+            mkdir -p frontend/src/views/{home,about,contact}
+            mkdir -p frontend/src/services/{api,auth}
+            mkdir -p frontend/src/types/{api,ui}
+            ;;
+        "angular")
+            mkdir -p frontend/{src/{app/{components,pages,services,models,guards},assets,environments},public}
+            mkdir -p frontend/src/app/components/{ui,layout,forms}
+            mkdir -p frontend/src/app/pages/{home,about,contact}
+            mkdir -p frontend/src/app/services/{api,auth}
+            mkdir -p frontend/src/app/models/{api,ui}
+            ;;
+        "nextjs")
+            mkdir -p frontend/{src/{app,components,lib,types,styles},public}
+            mkdir -p frontend/src/components/{ui,layout,forms}
+            mkdir -p frontend/src/lib/{api,auth}
+            mkdir -p frontend/src/types/{api,ui}
+            ;;
+    esac
+else
+    echo -e "${BLUE}📁 Backend-only project - skipping frontend structure${NC}"
+fi
 
 # Create backend structure based on framework
 echo -e "${BLUE}📁 Creating backend structure for $BACKEND_FRAMEWORK...${NC}"
@@ -309,8 +425,9 @@ mkdir -p docs/{api,deployment,development,user-guide}
 # Create essential files
 echo -e "${BLUE}📝 Creating configuration files...${NC}"
 
-# Root level files
-cat > package.json << EOF
+# Root level files - adjust scripts based on whether frontend exists
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    cat > package.json << EOF
 {
   "name": "$PROJECT_NAME",
   "version": "1.0.0",
@@ -338,12 +455,36 @@ cat > package.json << EOF
   }
 }
 EOF
+else
+    cat > package.json << EOF
+{
+  "name": "$PROJECT_NAME",
+  "version": "1.0.0",
+  "description": "$PROJECT_DESCRIPTION",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run dev:backend",
+    "dev:backend": "cd backend && npm run dev",
+    "test": "npm run test:backend",
+    "test:backend": "cd backend && npm test",
+    "install:all": "npm install && cd backend && npm install",
+    "setup:db": "cd backend && npm run db:setup",
+    "lint": "npm run lint:backend",
+    "lint:backend": "cd backend && npm run lint"
+  },
+  "keywords": ["api", "backend", "$BACKEND_FRAMEWORK"],
+  "author": "Your Team",
+  "license": "MIT"
+}
+EOF
+fi
 
-# Create frontend package.json based on framework
-echo -e "${BLUE}📝 Creating frontend configuration for $FRONTEND_FRAMEWORK...${NC}"
-case $FRONTEND_FRAMEWORK in
-    "react")
-        cat > frontend/package.json << 'EOF'
+# Create frontend package.json only if needed
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    echo -e "${BLUE}📝 Creating frontend configuration for $FRONTEND_FRAMEWORK...${NC}"
+    case $FRONTEND_FRAMEWORK in
+        "react")
+            cat > frontend/package.json << 'EOF'
 {
   "name": "frontend",
   "version": "1.0.0",
@@ -371,9 +512,9 @@ case $FRONTEND_FRAMEWORK in
   }
 }
 EOF
-        ;;
-    "vue")
-        cat > frontend/package.json << 'EOF'
+            ;;
+        "vue")
+            cat > frontend/package.json << 'EOF'
 {
   "name": "frontend",
   "version": "1.0.0",
@@ -398,9 +539,9 @@ EOF
   }
 }
 EOF
-        ;;
-    "angular")
-        cat > frontend/package.json << 'EOF'
+            ;;
+        "angular")
+            cat > frontend/package.json << 'EOF'
 {
   "name": "frontend",
   "version": "1.0.0",
@@ -424,9 +565,9 @@ EOF
   }
 }
 EOF
-        ;;
-    "nextjs")
-        cat > frontend/package.json << 'EOF'
+            ;;
+        "nextjs")
+            cat > frontend/package.json << 'EOF'
 {
   "name": "frontend",
   "version": "1.0.0",
@@ -452,8 +593,9 @@ EOF
   }
 }
 EOF
-        ;;
-esac
+            ;;
+    esac
+fi
 
 # Create backend package.json based on framework
 echo -e "${BLUE}📝 Creating backend configuration for $BACKEND_FRAMEWORK...${NC}"
@@ -560,15 +702,18 @@ API_BASE_URL=http://localhost:3001/api
 CORS_ORIGIN=http://localhost:3000
 EOF
 
-# Frontend environment
-cat > frontend/.env.example << EOF
+# Frontend environment only if frontend exists
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    cat > frontend/.env.example << EOF
 VITE_API_BASE_URL=http://localhost:3001/api
 VITE_APP_NAME=$PROJECT_NAME
 VITE_APP_VERSION=1.0.0
 EOF
+fi
 
-# Docker configuration
-cat > docker-compose.yml << EOF
+# Docker configuration - adjust based on project type
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
@@ -611,9 +756,43 @@ services:
 volumes:
   postgres_data:
 EOF
+else
+    cat > docker-compose.yml << EOF
+version: '3.8'
 
-# Create README
-cat > README.md << EOF
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+    depends_on:
+      - database
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${PROJECT_NAME//-/_}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+EOF
+fi
+
+# Create README - adjust based on project type
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    cat > README.md << EOF
 # $PROJECT_NAME
 
 $PROJECT_DESCRIPTION
@@ -658,6 +837,50 @@ $PROJECT_NAME/
 
 MIT
 EOF
+else
+    cat > README.md << EOF
+# $PROJECT_NAME
+
+$PROJECT_DESCRIPTION
+
+## 🚀 Quick Start
+
+1. **Install dependencies:**
+   \`\`\`bash
+   npm run install:all
+   \`\`\`
+
+2. **Set up environment variables:**
+   \`\`\`bash
+   cp backend/.env.example backend/.env
+   \`\`\`
+
+3. **Start development server:**
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+
+## 🏗️ Project Structure
+
+\`\`\`
+$PROJECT_NAME/
+├── backend/           # $BACKEND_FRAMEWORK API server
+├── docs/             # Documentation
+├── scripts/          # Utility scripts
+└── tests/            # Test files
+\`\`\`
+
+## 🛠️ Tech Stack
+
+- **Backend**: $BACKEND_FRAMEWORK
+- **Database**: $DATABASE
+- **Deployment**: $DEPLOYMENT
+
+## 📝 License
+
+MIT
+EOF
+fi
 
 # Create development guide
 cat > docs/development/README.md << EOF
@@ -689,16 +912,18 @@ cat > docs/development/README.md << EOF
 
 ## Development Workflow
 
-1. **Frontend**: http://localhost:3000
-2. **Backend API**: http://localhost:3001
-3. **Database**: localhost:5432
+$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    echo "1. **Frontend**: http://localhost:3000"
+fi)
+1. **Backend API**: http://localhost:3001
+2. **Database**: localhost:5432
 
 ## Key Development Commands
 
-- \`npm run dev\` - Start both frontend and backend
+- \`npm run dev\` - Start $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "both frontend and backend"; else echo "backend server"; fi)
 - \`npm run test\` - Run all tests
 - \`npm run lint\` - Run linting
-- \`npm run build\` - Build for production
+$(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "- \`npm run build\` - Build for production"; fi)
 EOF
 
 echo -e "${GREEN}✅ Project structure created successfully!${NC}"
@@ -712,9 +937,11 @@ echo -e "   ${GREEN}npm run install:all${NC}"
 echo ""
 echo -e "${YELLOW}3.${NC} Set up environment variables:"
 echo -e "   ${GREEN}cp backend/.env.example backend/.env${NC}"
-echo -e "   ${GREEN}cp frontend/.env.example frontend/.env${NC}"
+$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    echo "echo -e \"   ${GREEN}cp frontend/.env.example frontend/.env${NC}\""
+fi)
 echo ""
-echo -e "${YELLOW}4.${NC} Start the development servers:"
+echo -e "${YELLOW}4.${NC} Start the development $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "servers"; else echo "server"; fi):"
 echo -e "   ${GREEN}npm run dev${NC}"
 echo ""
 echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for development!${NC}"
