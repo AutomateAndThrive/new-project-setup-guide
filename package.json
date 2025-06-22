@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"No tests specified\" && exit 0",
-    "lint": "echo \"No linting configured yet\" && exit 0",
-    "format": "echo \"No formatting configured yet\" && exit 0",
-    "prepare": "husky install"
+    "lint": "node scripts/lint.js",
+    "format": "node scripts/format.js",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
   },
   "keywords": [
     "project-setup",
@@ -19,10 +20,20 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "husky": "^8.0.3"
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "npm run lint",
+      "npm run format"
+    ],
+    "*.{md,json,yml,yaml}": [
+      "npm run format"
+    ]
   }
 } 
