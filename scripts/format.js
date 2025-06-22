@@ -1,15 +1,15 @@
-#!/usr/bin/env node
-
-// Test comment for pre-commit hook
 // Simple format script that can handle file paths from lint-staged
 // This is a placeholder until we add Prettier
 
 const files = process.argv.slice(2);
 
 if (files.length > 0) {
+  // eslint-disable-next-line no-console
   console.log(`No formatting configured yet for: ${files.join(', ')}`);
 } else {
+  // eslint-disable-next-line no-console
   console.log('No formatting configured yet');
 }
 
+// eslint-disable-next-line no-process-exit
 process.exit(0); 
