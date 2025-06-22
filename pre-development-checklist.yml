@@ -1,0 +1,245 @@
+# ==============================================================================
+# Pre-Development Setup Checklist
+#
+# Purpose:
+#   This file contains the essential tasks required to complete the setup
+#   after running the scaffolding script, before beginning actual development.
+#
+# Usage:
+#   This YAML file is designed to be parsed by an automation script
+#   (e.g., create_github_issues.py) to programmatically
+#   create issues in the project's issue tracker.
+#
+# Customization:
+#   Update the project details and add any project-specific setup requirements.
+# ==============================================================================
+
+project:
+  name: "Your Project Name"
+  description: "Your project description from PRD"
+  version: "1.0.0"
+  status: "Foundation Complete - Ready for Development"
+
+phases:
+  - name: "Foundation Review & Setup"
+    status: "ready-to-start"
+    priority: "critical"
+    tasks:
+      - id: "FOUNDATION-001"
+        title: "Review generated project structure"
+        description: |
+          Explore the generated files and understand the structure:
+          - Review backend/src/ structure (controllers, routes, models, services)
+          - Review frontend/src/ structure (components, pages, services)
+          - Understand the database migration system
+          - Review CI/CD workflows in .github/workflows/
+          - Familiarize yourself with the development scripts
+        status: "pending"
+        assignee: "lead-developer"
+        estimated_hours: 2
+        dependencies: []
+        
+      - id: "FOUNDATION-002"
+        title: "Customize environment variables"
+        description: |
+          Update environment files for your specific setup:
+          - Copy backend/.env.development to backend/.env
+          - Update DATABASE_URL with your actual database credentials
+          - Configure any API keys or external service credentials
+          - Update frontend environment variables if applicable
+          - Verify all environment variables are properly set
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 1
+        dependencies: ["FOUNDATION-001"]
+        
+      - id: "FOUNDATION-003"
+        title: "Set up and test database"
+        description: |
+          Initialize your database and verify the foundation:
+          - Run initial migrations: cd backend && ./scripts/migrate.sh
+          - Verify database connection and basic user table
+          - Test the development environment: ./scripts/start-development.sh local
+          - Verify both frontend and backend are running correctly
+          - Test basic API endpoints (health check, etc.)
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 2
+        dependencies: ["FOUNDATION-002"]
+
+  - name: "Domain Planning & Database Design"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "DOMAIN-001"
+        title: "Define core domain entities"
+        description: |
+          Based on your PRD, identify and document your main entities:
+          - List all core business entities (users, products, orders, etc.)
+          - Define relationships between entities
+          - Document business rules and constraints
+          - Create entity relationship diagram
+          - Validate with stakeholders if needed
+        status: "pending"
+        assignee: "lead-developer"
+        estimated_hours: 4
+        dependencies: ["FOUNDATION-003"]
+        
+      - id: "DOMAIN-002"
+        title: "Design database schema"
+        description: |
+          Create database schema for your domain entities:
+          - Design tables for each core entity
+          - Define primary keys, foreign keys, and indexes
+          - Plan for data types and constraints
+          - Consider performance and scalability requirements
+          - Document the schema design
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 6
+        dependencies: ["DOMAIN-001"]
+        
+      - id: "DOMAIN-003"
+        title: "Create database migrations"
+        description: |
+          Implement the database schema:
+          - Create migration files for each entity
+          - Add proper indexes and constraints
+          - Include seed data for development
+          - Test migrations in development environment
+          - Verify data integrity and relationships
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 8
+        dependencies: ["DOMAIN-002"]
+
+  - name: "Development Environment Setup"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "ENV-001"
+        title: "Configure development tools"
+        description: |
+          Set up development environment and tools:
+          - Configure IDE/editor settings and extensions
+          - Set up linting and formatting rules
+          - Configure debugging tools for both frontend and backend
+          - Set up Git hooks for pre-commit checks
+          - Verify all development scripts work correctly
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 3
+        dependencies: ["FOUNDATION-003"]
+        
+      - id: "ENV-002"
+        title: "Set up testing infrastructure"
+        description: |
+          Prepare testing environment:
+          - Configure Jest for backend testing
+          - Set up Vitest for frontend testing
+          - Create test database configuration
+          - Add testing scripts to package.json
+          - Verify test runners work correctly
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 2
+        dependencies: ["ENV-001"]
+
+  - name: "Project Configuration"
+    status: "pending"
+    priority: "medium"
+    tasks:
+      - id: "CONFIG-001"
+        title: "Update project metadata"
+        description: |
+          Customize project information:
+          - Update package.json with project name and description
+          - Update README.md with project-specific information
+          - Configure repository settings and branch protection
+          - Set up project labels and milestones
+          - Update license if needed
+        status: "pending"
+        assignee: "lead-developer"
+        estimated_hours: 2
+        dependencies: ["FOUNDATION-001"]
+        
+      - id: "CONFIG-002"
+        title: "Configure external services"
+        description: |
+          Set up any required external services:
+          - Configure monitoring and logging services
+          - Set up error tracking (Sentry, etc.)
+          - Configure analytics if needed
+          - Set up backup and storage services
+          - Verify all external integrations work
+        status: "pending"
+        assignee: "devops-engineer"
+        estimated_hours: 4
+        dependencies: ["CONFIG-001"]
+
+  - name: "Team Setup & Documentation"
+    status: "pending"
+    priority: "medium"
+    tasks:
+      - id: "TEAM-001"
+        title: "Create development guidelines"
+        description: |
+          Establish development standards:
+          - Document coding standards and conventions
+          - Create Git workflow and branching strategy
+          - Define code review process
+          - Document testing requirements
+          - Create deployment procedures
+        status: "pending"
+        assignee: "lead-developer"
+        estimated_hours: 4
+        dependencies: ["CONFIG-001"]
+        
+      - id: "TEAM-002"
+        title: "Set up project management"
+        description: |
+          Configure project management tools:
+          - Set up issue templates and workflows
+          - Configure project boards and milestones
+          - Create development sprint planning
+          - Set up team communication channels
+          - Document team roles and responsibilities
+        status: "pending"
+        assignee: "project-manager"
+        estimated_hours: 3
+        dependencies: ["TEAM-001"]
+
+success_metrics:
+  setup_completion:
+    - metric: "Environment Setup Time"
+      target: "Complete all setup within 1-2 days"
+      current: "TBD"
+      
+  readiness:
+    - metric: "Development Readiness"
+      target: "100% of team can run and test the application"
+      current: "TBD"
+      
+  quality:
+    - metric: "Setup Quality"
+      target: "Zero critical setup issues"
+      current: "TBD"
+
+dependencies:
+  external:
+    - name: "Database (PostgreSQL/MySQL/MongoDB)"
+      status: "required"
+      setup_required: true
+    - name: "Development Tools"
+      status: "required"
+      setup_required: true
+    - name: "External Services"
+      status: "project-dependent"
+      setup_required: false
+
+notes:
+  - "This checklist covers only pre-development setup tasks"
+  - "Once completed, the team is ready to begin feature development"
+  - "Add project-specific setup requirements based on your PRD"
+  - "Consider team size and experience when estimating hours"
+  - "All tasks should be completed before starting business logic development"

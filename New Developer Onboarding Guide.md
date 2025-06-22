@@ -1,10 +1,10 @@
-# New Developer Onboarding Guide - Pixel to Profit
+# New Developer Onboarding Guide
 
-Welcome to the Pixel to Profit development team! This guide will help you get up and running with our AI-powered print-on-demand listing automation tool.
+Welcome to the development team! This guide will help you get up and running with our project.
 
 ## 🎯 Project Overview
 
-**Pixel to Profit** is a web application that helps print-on-demand creators automate their Etsy listing creation process. The tool uses AI to analyze designs and generate optimized titles, tags, and descriptions, while also providing color previews for all available product variations.
+**Project Name** is a web application that helps users achieve their goals. The tool provides a modern, scalable foundation for building full-stack applications.
 
 ### Key Features
 - **AI-Powered Content Generation**: Uses Google Gemini to analyze designs and generate Etsy-optimized content
@@ -277,7 +277,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 🎉 Welcome to the Team!
 
-We're excited to have you on board! The Pixel to Profit project is an innovative tool that will help creators save time and improve their Etsy listings. Your contributions will directly impact the success of print-on-demand creators worldwide.
+We're excited to have you on board! This project provides a solid foundation for building modern web applications. Your contributions will help create robust, scalable software solutions.
 
 **Remember**: Don't hesitate to ask questions, share ideas, and contribute to making this tool the best it can be!
 

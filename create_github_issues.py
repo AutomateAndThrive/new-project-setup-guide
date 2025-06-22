@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 """
-GitHub Issue Creator for Pixel to Profit Project
-Creates GitHub issues based on the master task list for the AI-powered print-on-demand listing automation tool.
+GitHub Issue Creator for New Projects
+
+Purpose:
+  This script creates GitHub issues from a YAML configuration file.
+  It's designed to automate the creation of initial project setup tasks.
+
+Usage:
+  1. Install dependencies: `pip install PyYAML requests`
+  2. Configure the variables in the "Configuration" section below.
+  3. Set your GitHub Personal Access Token as an environment variable.
+  4. Run the script: `python create_github_issues.py`
 """
 
 import yaml
@@ -12,12 +21,11 @@ from typing import Dict, List, Any
 import argparse
 
 # ==============================================================================
-# GitHub Issue Creation Script
+# GitHub Issue Creator for New Projects
 #
-# Description:
-#   This script reads a YAML file containing a list of issues and uses the
-#   GitHub API to create them in a specified repository. It is designed to
-#   automate the initial setup of a project's issue tracker.
+# Purpose:
+#   This script creates GitHub issues from a YAML configuration file.
+#   It's designed to automate the creation of initial project setup tasks.
 #
 # Usage:
 #   1. Install dependencies: `pip install PyYAML requests`
@@ -31,7 +39,7 @@ import argparse
 REPO_OWNER = "YourGitHubUsername"
 REPO_NAME = "your-repo-name"
 # The name of the YAML file containing the issues to be created.
-ISSUES_FILE_PATH = "master-task-list.yml"
+ISSUES_FILE_PATH = "pre-development-checklist.yml"
 
 # --- GitHub API Setup ---
 # It is strongly recommended to set your GitHub token as an environment variable
@@ -122,99 +130,24 @@ def create_github_issue(issue_data):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create GitHub issues for Pixel to Profit project")
-    parser.add_argument("--token", required=True, help="GitHub personal access token")
-    parser.add_argument("--repo", required=True, help="GitHub repository name")
-    parser.add_argument("--owner", required=True, help="GitHub repository owner")
-    parser.add_argument("--task-file", default="master-task-list.yml", help="Path to task list YAML file")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be created without actually creating issues")
-    
-    args = parser.parse_args()
-    
-    # Load task list
-    task_list = load_task_list(args.task_file)
-    
-    # Initialize GitHub issue creator
-    creator = GitHubIssueCreator(args.token, args.repo, args.owner)
-    
-    # Track created issues
-    created_issues = []
-    failed_issues = []
-    
-    print(f"🚀 Creating GitHub issues for Pixel to Profit project...")
-    print(f"Repository: {args.owner}/{args.repo}")
-    print(f"Task file: {args.task_file}")
-    print(f"Dry run: {args.dry_run}")
+    """Main function to create GitHub issues from YAML file."""
+    if not check_configuration():
+        return
+
+    # Load issues from YAML file
+    issues = load_issues_from_yaml(ISSUES_FILE_PATH)
+    if issues is None:
+        return
+
+    print(f"🚀 Creating GitHub issues from {ISSUES_FILE_PATH}...")
+    print(f"Repository: {REPO_OWNER}/{REPO_NAME}")
     print("-" * 50)
-    
-    # Process each phase
-    for phase in task_list.get('phases', []):
-        phase_name = phase.get('name', 'Unknown Phase')
-        print(f"\n📋 Processing phase: {phase_name}")
-        
-        for task in phase.get('tasks', []):
-            task_id = task.get('id', 'Unknown')
-            title = task.get('title', 'Untitled Task')
-            
-            # Generate issue content
-            body = generate_issue_body(task, phase_name)
-            labels = get_labels_for_task(task, phase_name)
-            
-            # Format title with task ID
-            formatted_title = f"{task_id}: {title}"
-            
-            if args.dry_run:
-                print(f"  📝 Would create: {formatted_title}")
-                print(f"     Labels: {', '.join(labels)}")
-                print(f"     Body length: {len(body)} characters")
-            else:
-                print(f"  📝 Creating: {formatted_title}")
-                
-                # Create the issue
-                issue = creator.create_issue(
-                    title=formatted_title,
-                    body=body,
-                    labels=labels
-                )
 
-                if issue:
-                    created_issues.append({
-                        'id': task_id,
-                        'title': title,
-                        'url': issue['html_url'],
-                        'number': issue['number']
-                    })
-                    print(f"     ✅ Created: #{issue['number']} - {issue['html_url']}")
-                else:
-                    failed_issues.append({
-                        'id': task_id,
-                        'title': title
-                    })
-                    print(f"     ❌ Failed to create issue")
-    
-    # Summary
-    print("\n" + "=" * 50)
-    print("📊 SUMMARY")
-    print("=" * 50)
-    
-    if args.dry_run:
-        total_tasks = sum(len(phase.get('tasks', [])) for phase in task_list.get('phases', []))
-        print(f"Would create {total_tasks} issues")
-    else:
-        print(f"✅ Successfully created: {len(created_issues)} issues")
-        print(f"❌ Failed to create: {len(failed_issues)} issues")
-        
-        if created_issues:
-            print(f"\n📋 Created Issues:")
-            for issue in created_issues:
-                print(f"  #{issue['number']}: {issue['title']} - {issue['url']}")
-        
-        if failed_issues:
-            print(f"\n❌ Failed Issues:")
-            for issue in failed_issues:
-                print(f"  {issue['id']}: {issue['title']}")
+    # Process each issue
+    for issue_data in issues:
+        create_github_issue(issue_data)
 
-    print(f"\n🎉 Issue creation complete!")
+    print("\n🎉 Issue creation complete!")
 
 
 if __name__ == "__main__":

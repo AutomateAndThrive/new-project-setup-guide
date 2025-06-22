@@ -177,12 +177,12 @@ python create_github_issues.py \
   --token YOUR_GITHUB_TOKEN \
   --repo your-project-name \
   --owner YourGitHubUsername \
-  --task-file master-task-list.yml
+  --task-file pre-development-checklist.yml
 ```
 
 #### **Manual Task Creation**
 
-Alternatively, you can manually create issues based on the tasks defined in the `master-task-list.yml` file, following the project's branching strategy and development workflow.
+Alternatively, you can manually create issues based on the tasks defined in the `pre-development-checklist.yml` file, following the project's branching strategy and development workflow.
 
 ### **Section VIII: Project Customization**
 
