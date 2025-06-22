@@ -1,16 +1,20 @@
 # Project Branching Strategy
 
-This document outlines the Git branching strategy and workflow for new projects, ensuring consistent development practices across the team.
+This document outlines the **simplified Git branching strategy** for solo developers and small teams, ensuring consistent development practices without unnecessary complexity.
+
+## ⚠️ Important: Default Branch is develop
+
+**Please note that this repository uses `develop` as its default and primary integration branch, not `main`. All feature branches and bug fixes should be based on `develop`, and all Pull Requests should target `develop`. The `main` branch is reserved for stable, tagged production releases only.**
 
 ## 🎯 Overview
 
-Our branching strategy follows a **Git Flow** approach, adapted for the specific needs of our AI-powered print-on-demand listing automation tool. This strategy ensures:
+Our branching strategy follows a **simplified Git Flow** approach, optimized for small teams and solo developers. This strategy ensures:
 
 - **Stable production releases** with minimal bugs
 - **Parallel development** of multiple features
 - **Clear separation** between development and production code
 - **Easy rollback** capabilities for critical issues
-- **Continuous integration** and deployment readiness
+- **Automated quality gates** to prevent technical debt
 
 ## 🌿 Branch Structure
 
@@ -18,19 +22,20 @@ Our branching strategy follows a **Git Flow** approach, adapted for the specific
 
 #### `main` (Production)
 - **Purpose**: Contains production-ready code
-- **Source**: Merged from `develop` or `hotfix/*` branches
+- **Source**: Merged from `develop` branch
 - **Protection**: 
   - Requires pull request reviews
   - Requires status checks to pass
   - No direct pushes allowed
 - **Tagging**: Each merge to main creates a version tag (v1.0.0, v1.1.0, etc.)
 
-#### `develop` (Integration)
+#### `develop` (Integration) ⭐ **DEFAULT BRANCH**
 - **Purpose**: Integration branch for features and bug fixes
 - **Source**: Merged from `feature/*` and `bugfix/*` branches
 - **Protection**: 
   - Requires pull request reviews
   - Requires tests to pass
+  - Requires code coverage > 80%
 - **Deployment**: Automatically deployed to staging environment
 
 ### Supporting Branches
@@ -42,7 +47,7 @@ Our branching strategy follows a **Git Flow** approach, adapted for the specific
 - **Examples**:
   - `feature/AI-001-design-analysis`
   - `feature/FRONTEND-004-upload-component`
-  - `feature/BACKEND-005-gemini-integration`
+  - `feature/BACKEND-005-api-integration`
 
 #### `bugfix/*` (Bug Fixes)
 - **Purpose**: Fix bugs found in development
@@ -57,16 +62,41 @@ Our branching strategy follows a **Git Flow** approach, adapted for the specific
 - **Source**: Created from `main`
 - **Naming**: `hotfix/version-description`
 - **Examples**:
-  - `hotfix/v1.0.1-gemini-api-fix`
-  - `hotfix/v1.0.2-upload-security`
+  - `hotfix/v1.0.1-security-fix`
+  - `hotfix/v1.0.2-api-crash`
 
-#### `release/*` (Release Preparation)
-- **Purpose**: Prepare for a new production release
-- **Source**: Created from `develop`
-- **Naming**: `release/version-number`
-- **Examples**:
-  - `release/v1.1.0`
-  - `release/v1.2.0`
+## 📊 Branch Protection Rules
+
+| Branch | Purpose | PR Required? | Approvals | Status Checks | Direct Pushes |
+|--------|---------|--------------|-----------|---------------|---------------|
+| `main` | Production Releases | Yes | 2 | Required | Not Allowed |
+| `develop` | Feature Integration | Yes | 1 | Required | Not Allowed |
+| `hotfix/*` | Production Bugfixes | Yes | 2 | Required | Not Allowed |
+
+## 🔄 Visual Workflow
+
+```mermaid
+gitGraph
+   commit id: "Initial"
+   branch develop
+   commit id: "dev-init"
+   branch feature/AI-001
+   commit id: "feat-1"
+   commit id: "feat-2"
+   checkout develop
+   merge feature/AI-001 id: "merge-feat"
+   checkout main
+   merge develop id: "merge-release"
+   tag "v1.0.0"
+   checkout develop
+   branch hotfix/v1.0.1
+   commit id: "hotfix"
+   checkout main
+   merge hotfix/v1.0.1 id: "merge-hotfix-main"
+   tag "v1.0.1"
+   checkout develop
+   merge hotfix/v1.0.1 id: "merge-hotfix-dev"
+```
 
 ## 🔄 Workflow
 
@@ -130,76 +160,75 @@ Our branching strategy follows a **Git Flow** approach, adapted for the specific
 
 ### Release Workflow
 
-1. **Create Release Branch**
+1. **Prepare Release**
    ```bash
-   git checkout develop  
-   git pull origin develop  
-   git checkout -b release/v1.1.0
+   # Ensure develop is stable
+   git checkout develop
+   git pull origin develop
+   
+   # Create release commit
+   git commit -m "chore: prepare release v1.1.0"
+   git push origin develop
    ```
 
-2. **Prepare Release**
-   - Update version numbers
-   - Update changelog
-   - Final testing and bug fixes
-   - Update documentation
-
-3. **Merge to Main and Develop**
+2. **Merge to Main**
    ```bash
-   # Merge to main
+   # Create PR from develop to main
+   # After approval and merge:
    git checkout main
-   git merge release/v1.1.0
+   git pull origin main
    git tag v1.1.0
    git push origin main --tags
-   
-   # Merge to develop
-   git checkout develop
-   git merge release/v1.1.0
-   git push origin develop
-   
-   # Delete release branch
-   git branch -d release/v1.1.0
    ```
 
 ### Hotfix Workflow
 
-1. **Create Hotfix Branch**
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b hotfix/v1.0.1-critical-fix
-   ```
+**⚠️ Critical: Follow this checklist exactly to avoid losing fixes**
 
-2. **Fix Critical Issue**
-   ```bash
-   # Make critical fix
-   git add .
-   git commit -m "fix: resolve critical Gemini API timeout issue"
-   
-   # Push and create PR
-   git push origin hotfix/v1.0.1-critical-fix
-   ```
+- [ ] Create hotfix/vX.X.X branch from main
+- [ ] Implement and commit the fix
+- [ ] Create a Pull Request targeting main
+- [ ] After approval, merge the PR into main
+- [ ] Immediately create a new Git tag for the release (e.g., `git tag v1.0.1`)
+- [ ] Push the tag to the remote (`git push origin --tags`)
+- [ ] Immediately create a second Pull Request from the hotfix branch targeting develop
+- [ ] Merge the second PR into develop to ensure the fix is not lost in the next release
+- [ ] Delete the hotfix/* branch
 
-3. **Merge to Main and Develop**
-   ```bash
-   # Merge to main
-   git checkout main
-   git merge hotfix/v1.0.1-critical-fix
-   git tag v1.0.1
-   git push origin main --tags
-   
-   # Merge to develop
-   git checkout develop
-   git merge hotfix/v1.0.1-critical-fix
-   git push origin develop
-   
-   # Delete hotfix branch
-   git branch -d hotfix/v1.0.1-critical-fix
-   ```
+#### Hotfix Example
+```bash
+# 1. Create hotfix branch from main
+git checkout main
+git pull origin main
+git checkout -b hotfix/v1.0.1-security-fix
+
+# 2. Fix the issue
+git add .
+git commit -m "fix: resolve critical security vulnerability"
+
+# 3. Push and create PR to main
+git push origin hotfix/v1.0.1-security-fix
+
+# 4. After merging to main, tag the release
+git checkout main
+git pull origin main
+git tag v1.0.1
+git push origin main --tags
+
+# 5. Create PR to develop
+git checkout hotfix/v1.0.1-security-fix
+git push origin hotfix/v1.0.1-security-fix
+
+# 6. After merging to develop, delete the branch
+git branch -d hotfix/v1.0.1-security-fix
+git push origin --delete hotfix/v1.0.1-security-fix
+```
 
 ## 📝 Commit Message Convention
 
-We follow the **Conventional Commits** specification:
+We follow the **Conventional Commits** specification for consistent commit messages:
 
+### Format
 ```
 <type>[optional scope]: <description>
 
@@ -209,138 +238,72 @@ We follow the **Conventional Commits** specification:
 ```
 
 ### Types
-- **feat**: New feature
-- **fix**: Bug fix
-- **docs**: Documentation changes
-- **style**: Code style changes (formatting, etc.)
-- **refactor**: Code refactoring
-- **test**: Adding or updating tests
-- **chore**: Maintenance tasks
+- **feat**: A new feature
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **style**: Changes that do not affect the meaning of the code
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **perf**: A code change that improves performance
+- **test**: Adding missing tests or correcting existing tests
+- **chore**: Changes to the build process or auxiliary tools
 
 ### Examples
 ```bash
-feat(AI): implement design analysis with Gemini API
-fix(frontend): resolve upload validation issue
-docs(api): update API documentation
-refactor(backend): optimize database queries
-test(gemini): add unit tests for image analysis
-chore(deps): update dependencies
+git commit -m "feat(AI): implement design analysis with Gemini API"
+git commit -m "fix(frontend): resolve upload validation issue"
+git commit -m "docs: update API documentation"
+git commit -m "test: add unit tests for user authentication"
+git commit -m "chore: update dependencies"
 ```
 
-## 🏷️ Versioning Strategy
+### Tools for Conventional Commits
+- **Commitizen**: Interactive commit message creation
+- **Commitlint**: Validate commit messages
+- **Husky**: Pre-commit hooks for enforcement
 
-We follow **Semantic Versioning** (SemVer):
+## 🔧 Automated Quality Gates
 
-- **MAJOR.MINOR.PATCH**
-- **MAJOR**: Breaking changes
-- **MINOR**: New features (backward compatible)
-- **PATCH**: Bug fixes (backward compatible)
+### Pre-commit Hooks
+- **ESLint**: Code linting and style checking
+- **Prettier**: Code formatting
+- **TypeScript**: Type checking
+- **Tests**: Run unit tests
+- **Commitlint**: Validate commit messages
 
-### Version Examples
-- `v1.0.0`: Initial MVP release
-- `v1.1.0`: Added color visualizer feature
-- `v1.1.1`: Fixed upload validation bug
-- `v2.0.0`: Breaking changes in API
+### Pull Request Requirements
+- **Code Review**: At least one approval required
+- **Status Checks**: All CI/CD checks must pass
+- **Code Coverage**: Minimum 80% coverage required
+- **Security Scan**: Automated security vulnerability check
 
-## 🔒 Branch Protection Rules
-
-### Main Branch
-- **Require pull request reviews**: 2 approvals minimum
-- **Require status checks to pass**: All CI/CD checks
-- **Require branches to be up to date**: Before merging
-- **Restrict pushes**: No direct pushes allowed
-- **Include administrators**: Apply rules to admins too
-
-### Develop Branch
-- **Require pull request reviews**: 1 approval minimum
-- **Require status checks to pass**: All tests must pass
-- **Require branches to be up to date**: Before merging
-- **Restrict pushes**: No direct pushes allowed
-
-## 🚀 CI/CD Integration
-
-### Automated Checks
-- **Linting**: ESLint for frontend, ESLint for backend
-- **Testing**: Jest for backend, Vitest for frontend
-- **Type Checking**: TypeScript compilation
-- **Build Verification**: Ensure build succeeds
-- **Security Scanning**: Dependency vulnerability checks
-
-### Deployment Pipeline
-- **Feature Branches**: Deploy to feature environment
-- **Develop Branch**: Deploy to staging environment
-- **Main Branch**: Deploy to production environment
-
-## 📋 Pull Request Guidelines
-
-### Required Elements
-- **Clear title**: Descriptive of the change
-- **Detailed description**: What, why, and how
-- **Task reference**: Link to related task/issue
-- **Screenshots**: For UI changes
-- **Testing notes**: How to test the changes
-
-### Review Checklist
-- [ ] Code follows project standards
-- [ ] Tests are included and passing
-- [ ] Documentation is updated
-- [ ] No breaking changes (or documented)
-- [ ] Performance impact considered
-- [ ] Security implications reviewed
-
-## 🎯 Team Collaboration
-
-### Daily Workflow
-1. **Start of day**: Pull latest changes from `develop`
-2. **During development**: Commit frequently with clear messages
-3. **End of day**: Push changes and create/update PRs
-
-### Weekly Process
-1. **Monday**: Review and merge completed features
-2. **Wednesday**: Mid-week progress review
-3. **Friday**: Prepare for next week's planning
-
-### Release Planning
-1. **Two weeks before release**: Feature freeze on `develop`
-2. **One week before release**: Create release branch
-3. **Release day**: Merge to main and tag
-
-## 🆘 Troubleshooting
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-#### Merge Conflicts
-```bash
-# Resolve conflicts
-git status
-# Edit conflicted files
-git add .
-git commit -m "resolve merge conflicts"
-```
+#### "Branch protection rules prevent pushing"
+- **Solution**: Create a pull request instead of direct push
+- **Prevention**: Always use feature branches and PRs
 
-#### Reverting Changes
-```bash
-# Revert last commit
-git revert HEAD
+#### "Tests failing in CI but passing locally"
+- **Solution**: Run `npm run test:ci` locally to match CI environment
+- **Prevention**: Use Docker for consistent development environment
 
-# Revert specific commit
-git revert <commit-hash>
-```
+#### "Merge conflicts in develop"
+- **Solution**: Rebase your feature branch on latest develop
+- **Prevention**: Keep feature branches short-lived and up-to-date
 
-#### Emergency Hotfix
-```bash
-# Create hotfix from main
-git checkout main
-git checkout -b hotfix/emergency-fix
-# Make fix and follow hotfix workflow
-```
+#### "Forgot to merge hotfix to develop"
+- **Solution**: Cherry-pick the hotfix commit to develop
+- **Prevention**: Follow the hotfix checklist exactly
 
-## 📚 Resources
+### Debugging Failed CI/CD Checks
+See the [CI/CD Guide](docs/development/CI_CD_Guide.md) for detailed debugging information.
 
-- **Git Flow Documentation**: https://nvie.com/posts/a-successful-git-branching-model/
-- **Conventional Commits**: https://www.conventionalcommits.org/
-- **Semantic Versioning**: https://semver.org/
-- **GitHub Flow**: https://guides.github.com/introduction/flow/
+## 📚 Additional Resources
+
+- **[Conventional Commits](https://www.conventionalcommits.org/)**: Commit message specification
+- **[Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)**: Original Git Flow model
+- **[GitHub Flow](https://guides.github.com/introduction/flow/)**: Alternative simplified workflow
 
 ---
 
