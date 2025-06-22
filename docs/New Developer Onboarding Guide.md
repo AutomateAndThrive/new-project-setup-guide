@@ -158,6 +158,234 @@ pixel-to-profit/
 - **Testing**: Minimum 80% coverage
 - **Commits**: Conventional commit messages
 
+## 🗺️ Where Does My Code Go?
+
+Understanding the flow of your code helps you make better architectural decisions and debug issues more effectively.
+
+### Frontend Code Flow
+
+```
+User Interaction → React Component → Custom Hook → Service Layer → API Call
+     ↓
+State Update ← Response Processing ← Backend API ← Database/External APIs
+```
+
+#### 1. **React Components** (`frontend/src/components/`)
+
+- **Purpose**: UI presentation and user interaction
+- **Responsibility**: Handle user events, display data, manage local state
+- **Example**: `DesignUploader.tsx` handles file uploads and displays progress
+
+#### 2. **Custom Hooks** (`frontend/src/hooks/`)
+
+- **Purpose**: Reusable logic and state management
+- **Responsibility**: Data fetching, state synchronization, side effects
+- **Example**: `useDesignAnalysis.ts` manages AI analysis state and API calls
+
+#### 3. **Service Layer** (`frontend/src/services/`)
+
+- **Purpose**: API communication and external integrations
+- **Responsibility**: HTTP requests, data transformation, error handling
+- **Example**: `geminiService.ts` handles all Google Gemini API interactions
+
+#### 4. **State Management** (`frontend/src/store/`)
+
+- **Purpose**: Global application state
+- **Responsibility**: Shared data, user preferences, application state
+- **Example**: `designStore.ts` manages current design and analysis results
+
+### Backend Code Flow
+
+```
+HTTP Request → Express Router → Controller → Service → Model → Database
+     ↓
+HTTP Response ← Data Processing ← Business Logic ← Data Access ← Query Results
+```
+
+#### 1. **Express Routes** (`backend/src/routes/`)
+
+- **Purpose**: Define API endpoints and request handling
+- **Responsibility**: URL mapping, middleware application, request validation
+- **Example**: `designRoutes.ts` defines `/api/designs` endpoints
+
+#### 2. **Controllers** (`backend/src/controllers/`)
+
+- **Purpose**: Handle HTTP requests and responses
+- **Responsibility**: Request parsing, response formatting, error handling
+- **Example**: `designController.ts` processes design upload and analysis requests
+
+#### 3. **Services** (`backend/src/services/`)
+
+- **Purpose**: Business logic and external API integration
+- **Responsibility**: Data processing, external API calls, complex operations
+- **Example**: `geminiService.ts` handles AI analysis and content generation
+
+#### 4. **Models** (`backend/src/models/`)
+
+- **Purpose**: Database schema and data access
+- **Responsibility**: Data validation, database queries, relationships
+- **Example**: `Design.ts` defines the design data structure and database operations
+
+### Data Flow Examples
+
+#### Design Upload Flow
+
+```
+1. User uploads design → React Component (DesignUploader)
+2. File validation → Custom Hook (useFileValidation)
+3. Upload to server → Service (uploadService)
+4. Backend receives → Controller (designController.upload)
+5. Process image → Service (imageProcessingService)
+6. Store in database → Model (Design.create)
+7. Return response → Controller → Service → Component
+8. Update UI → State management → Component re-render
+```
+
+#### AI Analysis Flow
+
+```
+1. User requests analysis → Component (AnalysisButton)
+2. Trigger analysis → Hook (useDesignAnalysis)
+3. Call backend API → Service (geminiService.analyze)
+4. Backend processes → Controller (designController.analyze)
+5. Call Gemini API → Service (geminiService.callAPI)
+6. Process response → Service (contentGenerationService)
+7. Store results → Model (Analysis.create)
+8. Return to frontend → Service → Hook → Component
+9. Display results → Component (AnalysisResults)
+```
+
+### File Organization Guidelines
+
+#### Where to Put New Code
+
+| Type of Code          | Location                   | Example                                    |
+| --------------------- | -------------------------- | ------------------------------------------ |
+| **UI Components**     | `frontend/src/components/` | `Button.tsx`, `Modal.tsx`                  |
+| **Page Components**   | `frontend/src/pages/`      | `HomePage.tsx`, `DesignPage.tsx`           |
+| **Custom Hooks**      | `frontend/src/hooks/`      | `useApi.ts`, `useLocalStorage.ts`          |
+| **API Services**      | `frontend/src/services/`   | `userService.ts`, `designService.ts`       |
+| **Type Definitions**  | `frontend/src/types/`      | `user.types.ts`, `api.types.ts`            |
+| **Utility Functions** | `frontend/src/utils/`      | `validation.ts`, `formatting.ts`           |
+| **API Routes**        | `backend/src/routes/`      | `userRoutes.ts`, `designRoutes.ts`         |
+| **Controllers**       | `backend/src/controllers/` | `userController.ts`, `designController.ts` |
+| **Business Logic**    | `backend/src/services/`    | `userService.ts`, `analysisService.ts`     |
+| **Database Models**   | `backend/src/models/`      | `User.ts`, `Design.ts`                     |
+| **Middleware**        | `backend/src/middleware/`  | `auth.ts`, `validation.ts`                 |
+
+#### Naming Conventions
+
+- **Components**: PascalCase (`DesignUploader.tsx`)
+- **Hooks**: camelCase with `use` prefix (`useDesignAnalysis.ts`)
+- **Services**: camelCase with `Service` suffix (`geminiService.ts`)
+- **Controllers**: camelCase with `Controller` suffix (`designController.ts`)
+- **Models**: PascalCase (`Design.ts`, `User.ts`)
+- **Types**: camelCase with `.types.ts` suffix (`design.types.ts`)
+
+### Integration Points
+
+#### Frontend ↔ Backend
+
+- **API Endpoints**: Defined in `backend/src/routes/`
+- **Data Types**: Shared in `frontend/src/types/` and `backend/src/types/`
+- **Error Handling**: Consistent error responses and frontend error handling
+
+#### External APIs
+
+- **Google Gemini**: Handled in `backend/src/services/geminiService.ts`
+- **Printify**: Handled in `backend/src/services/printifyService.ts`
+- **File Storage**: Handled in `backend/src/services/storageService.ts`
+
+#### Database
+
+- **Models**: Defined in `backend/src/models/`
+- **Migrations**: Stored in `backend/migrations/`
+- **Seeds**: Stored in `backend/seeds/`
+
+### Debugging the Flow
+
+#### Frontend Debugging
+
+```bash
+# Check component state
+console.log('Component state:', state);
+
+# Check API calls
+console.log('API response:', response);
+
+# Check service layer
+console.log('Service data:', data);
+```
+
+#### Backend Debugging
+
+```bash
+# Check request data
+console.log('Request body:', req.body);
+
+# Check service processing
+console.log('Service result:', result);
+
+# Check database queries
+console.log('Database result:', dbResult);
+```
+
+#### Common Debugging Points
+
+1. **Component State**: Check if data is properly passed down
+2. **API Calls**: Verify request/response format
+3. **Service Layer**: Ensure business logic is correct
+4. **Database**: Confirm data is stored/retrieved properly
+5. **External APIs**: Check API responses and error handling
+
+### Performance Considerations
+
+#### Frontend Performance
+
+- **Component Optimization**: Use React.memo for expensive components
+- **State Management**: Minimize unnecessary re-renders
+- **API Caching**: Cache frequently accessed data
+- **Bundle Size**: Lazy load components and routes
+
+#### Backend Performance
+
+- **Database Queries**: Optimize with indexes and efficient queries
+- **API Caching**: Cache external API responses
+- **Image Processing**: Use background jobs for heavy processing
+- **Response Time**: Target < 2 seconds for API responses
+
+### Security Flow
+
+#### Authentication Flow
+
+```
+1. User login → Frontend service → Backend controller
+2. Validate credentials → Authentication service
+3. Generate JWT token → Return to frontend
+4. Store token → Frontend state management
+5. Include in requests → Service layer → Backend middleware
+6. Validate token → Authentication middleware
+7. Allow/deny access → Controller processing
+```
+
+#### Data Validation Flow
+
+```
+1. User input → Frontend validation → Service layer
+2. API request → Backend validation middleware
+3. Controller processing → Service layer validation
+4. Database operations → Model validation
+5. Response → Frontend validation → UI display
+```
+
+Understanding this flow helps you:
+
+- **Debug issues** more effectively
+- **Make architectural decisions** with confidence
+- **Write better tests** that cover the entire flow
+- **Optimize performance** at the right points
+- **Implement security** measures properly
+
 ## 🧪 Testing
 
 ### Running Tests
