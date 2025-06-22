@@ -1,15 +1,24 @@
-#!/bin/bash
+#!/bin/zsh
 # ==============================================================================
-# Comprehensive Project Initialization Script
+# Enhanced Project Initialization Script
 #
 # Description:
-#   This script automates the complete setup of a new monorepo project.
-#   It creates the entire directory structure, initializes Git with the correct
-#   branching strategy, and creates placeholder configuration and source files.
+#   This script automates the complete setup of a new monorepo project with
+#   production-ready structure and best practices built in.
+#
+# Features:
+#   - Multiple tech stack support (React, Vue, Angular, Next.js, Node.js, Python, .NET, Java)
+#   - Database integration (PostgreSQL, MySQL, MongoDB, SQLite)
+#   - Deployment options (Docker, Kubernetes, Serverless)
+#   - Pre-configured dev tools (ESLint, Prettier, Husky, lint-staged, Commitlint)
+#   - CI/CD workflows (GitHub Actions)
+#   - Environment-specific configurations
+#   - Professional project templates
 #
 # Usage:
-#   Basic usage: ./init_project.sh
-#   Custom usage: ./init_project.sh --name "my-project" --frontend "react" --backend "node"
+#   Basic usage: ./init_project_improved.sh
+#   Custom usage: ./init_project_improved.sh --name "my-project" --frontend "react" --backend "node"
+#   Interactive: ./init_project_improved.sh --interactive
 #
 # Options:
 #   --name, -n          Project name (default: "my-project")
@@ -21,10 +30,12 @@
 #   --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)
 #   --environment, -e   Environment (development, staging, production)
 #   --interactive, -i   Interactive mode for guided setup
+#   --dry-run, -dr      Preview what will be created without actually creating
+#   --verbose, -v       Verbose output for debugging
 #   --help, -h          Show this help message
 # ==============================================================================
 
-set -e
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 # Colors for output
 RED='\033[0;31m'
@@ -34,6 +45,11 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+# Script configuration
+SCRIPT_DIR="${0:A:h}"
+SCRIPT_NAME="${0:t}"
+VERSION="2.0.0"
 
 # Default configuration
 PROJECT_NAME="my-project"
@@ -45,25 +61,83 @@ DEPLOYMENT="docker"
 PROJECT_TEMPLATE=""
 ENVIRONMENT="development"
 INTERACTIVE_MODE=false
+DRY_RUN=false
+VERBOSE=false
+
+# Logging functions
+log_info() {
+    print -P "%F{blue}ℹ️  $1%f"
+}
+
+log_success() {
+    print -P "%F{green}✅ $1%f"
+}
+
+log_warning() {
+    print -P "%F{yellow}⚠️  $1%f"
+}
+
+log_error() {
+    print -P "%F{red}❌ $1%f" >&2
+}
+
+log_verbose() {
+    if [[ "$VERBOSE" == true ]]; then
+        print -P "%F{cyan}🔍 $1%f"
+    fi
+}
 
 # Function to show help
 show_help() {
-    echo -e "${BLUE}Project Initialization Script${NC}"
-    echo ""
-    echo "Usage: $0 [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  --name, -n          Project name (default: my-project)"
-    echo "  --description, -d   Project description"
-    echo "  --frontend, -f      Frontend framework (react, vue, angular, nextjs)"
-    echo "  --backend, -b       Backend framework (node, python, dotnet, java)"
-    echo "  --database, -db     Database (postgresql, mysql, mongodb, sqlite)"
-    echo "  --deployment, -dep  Deployment (docker, kubernetes, serverless)"
-    echo "  --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)"
-    echo "  --environment, -e   Environment (development, staging, production)"
-    echo "  --interactive, -i   Interactive mode for guided setup"
-    echo "  --help, -h          Show this help message"
-    echo ""
+    cat << EOF
+${BLUE}Enhanced Project Initialization Script v${VERSION}${NC}
+
+${CYAN}Description:${NC}
+  This script creates a complete, production-ready project structure with your chosen
+  tech stack and all best practices built in. Think create-react-app or rails new,
+  but for full-stack, modern, production-grade projects.
+
+${CYAN}Usage:${NC}
+  $SCRIPT_NAME [OPTIONS]
+
+${CYAN}Options:${NC}
+  --name, -n          Project name (default: my-project)
+  --description, -d   Project description
+  --frontend, -f      Frontend framework (react, vue, angular, nextjs)
+  --backend, -b       Backend framework (node, python, dotnet, java)
+  --database, -db     Database (postgresql, mysql, mongodb, sqlite)
+  --deployment, -dep  Deployment (docker, kubernetes, serverless)
+  --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)
+  --environment, -e   Environment (development, staging, production)
+  --interactive, -i   Interactive mode for guided setup
+  --dry-run, -dr      Preview what will be created without actually creating
+  --verbose, -v       Verbose output for debugging
+  --help, -h          Show this help message
+
+${CYAN}Examples:${NC}
+  # Interactive setup
+  $SCRIPT_NAME --interactive
+
+  # Quick API project
+  $SCRIPT_NAME --name "my-api" --template "api"
+
+  # Full-stack SaaS
+  $SCRIPT_NAME --name "my-saas" --template "saas" --environment "development"
+
+  # Custom stack
+  $SCRIPT_NAME --name "my-app" --frontend "nextjs" --backend "python" --database "mongodb"
+
+${CYAN}What's Included:${NC}
+  • Professional project structure
+  • Pre-configured dev tools (ESLint, Prettier, Husky, lint-staged)
+  • Docker and CI/CD configurations
+  • Environment-specific settings
+  • Database migrations and seeds
+  • Testing setup
+  • Documentation templates
+  • Development scripts
+
+EOF
 }
 
 # Function to validate tech stack choices
@@ -73,8 +147,8 @@ validate_choice() {
     local option_name="$3"
     
     if [[ ! " $valid_options " =~ " $value " ]]; then
-        echo -e "${RED}❌ Invalid $option_name: '$value'${NC}"
-        echo -e "${YELLOW}Valid options: $valid_options${NC}"
+        log_error "Invalid $option_name: '$value'"
+        log_info "Valid options: $valid_options"
         exit 1
     fi
 }
@@ -90,7 +164,7 @@ apply_template() {
             BACKEND_FRAMEWORK="node"
             DATABASE="postgresql"
             DEPLOYMENT="docker"
-            echo -e "${GREEN}✅ Applied SaaS template${NC}"
+            log_success "Applied SaaS template"
             ;;
         "ecommerce")
             PROJECT_DESCRIPTION="An e-commerce platform with product catalog, shopping cart, and payment processing"
@@ -98,7 +172,7 @@ apply_template() {
             BACKEND_FRAMEWORK="node"
             DATABASE="postgresql"
             DEPLOYMENT="docker"
-            echo -e "${GREEN}✅ Applied E-commerce template${NC}"
+            log_success "Applied E-commerce template"
             ;;
         "api")
             PROJECT_DESCRIPTION="A RESTful API service with comprehensive documentation and testing"
@@ -106,7 +180,7 @@ apply_template() {
             BACKEND_FRAMEWORK="node"
             DATABASE="postgresql"
             DEPLOYMENT="docker"
-            echo -e "${GREEN}✅ Applied API template${NC}"
+            log_success "Applied API template"
             ;;
         "dashboard")
             PROJECT_DESCRIPTION="An admin dashboard with analytics, user management, and reporting"
@@ -114,7 +188,7 @@ apply_template() {
             BACKEND_FRAMEWORK="node"
             DATABASE="postgresql"
             DEPLOYMENT="docker"
-            echo -e "${GREEN}✅ Applied Dashboard template${NC}"
+            log_success "Applied Dashboard template"
             ;;
         "mobile")
             PROJECT_DESCRIPTION="A mobile app backend with user management and push notifications"
@@ -122,30 +196,30 @@ apply_template() {
             BACKEND_FRAMEWORK="node"
             DATABASE="mongodb"
             DEPLOYMENT="serverless"
-            echo -e "${GREEN}✅ Applied Mobile Backend template${NC}"
+            log_success "Applied Mobile Backend template"
             ;;
     esac
 }
 
 # Function for interactive setup
 interactive_setup() {
-    echo -e "${CYAN}🎯 Interactive Project Setup${NC}"
-    echo -e "${CYAN}==========================${NC}"
+    print -P "%F{cyan}🎯 Interactive Project Setup%f"
+    print -P "%F{cyan}==========================%f"
     echo ""
     
     # Project name
-    read -p "Project name [my-project]: " input_name
+    read "input_name?Project name [my-project]: "
     PROJECT_NAME=${input_name:-"my-project"}
     
     # Project template selection
-    echo -e "${YELLOW}Project templates:${NC}"
+    print -P "%F{yellow}Project templates:%f"
     echo "1) Custom project (choose your own tech stack)"
     echo "2) SaaS application (React + Node.js + PostgreSQL)"
     echo "3) E-commerce platform (Next.js + Node.js + PostgreSQL)"
     echo "4) API service (Node.js + PostgreSQL, no frontend)"
     echo "5) Admin dashboard (React + Node.js + PostgreSQL)"
     echo "6) Mobile backend (Node.js + MongoDB + Serverless)"
-    read -p "Choose project template [1]: " template_choice
+    read "template_choice?Choose project template [1]: "
     
     case ${template_choice:-1} in
         1) 
@@ -179,19 +253,19 @@ interactive_setup() {
     esac
     
     # If custom project or template needs customization
-    if [ -z "$PROJECT_TEMPLATE" ] || [ "$template_choice" = "1" ]; then
+    if [[ -z "$PROJECT_TEMPLATE" ]] || [[ "$template_choice" == "1" ]]; then
         # Project description
-        read -p "Project description [$PROJECT_DESCRIPTION]: " input_desc
+        read "input_desc?Project description [$PROJECT_DESCRIPTION]: "
         PROJECT_DESCRIPTION=${input_desc:-"$PROJECT_DESCRIPTION"}
         
         # Frontend framework (skip if API or mobile template)
-        if [ -n "$FRONTEND_FRAMEWORK" ]; then
-            echo -e "${YELLOW}Frontend frameworks:${NC}"
+        if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
+            print -P "%F{yellow}Frontend frameworks:%f"
             echo "1) React (recommended)"
             echo "2) Vue"
             echo "3) Angular"
             echo "4) Next.js"
-            read -p "Choose frontend framework [1]: " frontend_choice
+            read "frontend_choice?Choose frontend framework [1]: "
             case ${frontend_choice:-1} in
                 1) FRONTEND_FRAMEWORK="react" ;;
                 2) FRONTEND_FRAMEWORK="vue" ;;
@@ -202,12 +276,12 @@ interactive_setup() {
         fi
         
         # Backend framework
-        echo -e "${YELLOW}Backend frameworks:${NC}"
+        print -P "%F{yellow}Backend frameworks:%f"
         echo "1) Node.js (recommended)"
         echo "2) Python/FastAPI"
         echo "3) .NET"
         echo "4) Java/Spring"
-        read -p "Choose backend framework [1]: " backend_choice
+        read "backend_choice?Choose backend framework [1]: "
         case ${backend_choice:-1} in
             1) BACKEND_FRAMEWORK="node" ;;
             2) BACKEND_FRAMEWORK="python" ;;
@@ -217,12 +291,12 @@ interactive_setup() {
         esac
         
         # Database
-        echo -e "${YELLOW}Databases:${NC}"
+        print -P "%F{yellow}Databases:%f"
         echo "1) PostgreSQL (recommended)"
         echo "2) MySQL"
         echo "3) MongoDB"
         echo "4) SQLite"
-        read -p "Choose database [1]: " db_choice
+        read "db_choice?Choose database [1]: "
         case ${db_choice:-1} in
             1) DATABASE="postgresql" ;;
             2) DATABASE="mysql" ;;
@@ -232,11 +306,11 @@ interactive_setup() {
         esac
         
         # Deployment
-        echo -e "${YELLOW}Deployment options:${NC}"
+        print -P "%F{yellow}Deployment options:%f"
         echo "1) Docker (recommended)"
         echo "2) Kubernetes"
         echo "3) Serverless"
-        read -p "Choose deployment [1]: " dep_choice
+        read "dep_choice?Choose deployment [1]: "
         case ${dep_choice:-1} in
             1) DEPLOYMENT="docker" ;;
             2) DEPLOYMENT="kubernetes" ;;
@@ -245,11 +319,11 @@ interactive_setup() {
         esac
         
         # Environment
-        echo -e "${YELLOW}Environment:${NC}"
+        print -P "%F{yellow}Environment:%f"
         echo "1) Development (local development with hot reloading)"
         echo "2) Staging (pre-production for testing)"
         echo "3) Production (production-ready configuration)"
-        read -p "Choose environment [1]: " env_choice
+        read "env_choice?Choose environment [1]: "
         case ${env_choice:-1} in
             1) ENVIRONMENT="development" ;;
             2) ENVIRONMENT="staging" ;;
@@ -259,451 +333,463 @@ interactive_setup() {
     fi
     
     echo ""
-    echo -e "${GREEN}✅ Configuration complete!${NC}"
+    log_success "Configuration complete!"
     echo ""
 }
 
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --name|-n)
-            PROJECT_NAME="$2"
-            shift 2
+# Function to display configuration summary
+show_configuration() {
+    print -P "%F{blue}🚀 Project Configuration Summary%f"
+    print -P "%F{blue}===============================%f"
+    print -P "%F{yellow}Project:%f $PROJECT_NAME"
+    print -P "%F{yellow}Description:%f $PROJECT_DESCRIPTION"
+    print -P "%F{yellow}Frontend:%f ${FRONTEND_FRAMEWORK:-"None"}"
+    print -P "%F{yellow}Backend:%f $BACKEND_FRAMEWORK"
+    print -P "%F{yellow}Database:%f $DATABASE"
+    print -P "%F{yellow}Deployment:%f $DEPLOYMENT"
+    print -P "%F{yellow}Environment:%f $ENVIRONMENT"
+    print -P "%F{yellow}Template:%f ${PROJECT_TEMPLATE:-"Custom"}"
+    echo ""
+}
+
+# Function to create directory structure
+create_directory_structure() {
+    log_info "Creating project structure..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create directory: $PROJECT_NAME"
+        return
+    fi
+    
+    mkdir -p "$PROJECT_NAME"
+    cd "$PROJECT_NAME"
+    
+    # Create main project structure
+    mkdir -p {backend,docs,scripts,tests,assets}
+    
+    # Create frontend structure only if needed
+    if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
+        mkdir -p frontend
+        log_info "Creating frontend structure for $FRONTEND_FRAMEWORK..."
+        case $FRONTEND_FRAMEWORK in
+            "react")
+                mkdir -p frontend/{src/{components,pages,hooks,utils,services,types,assets},public}
+                mkdir -p frontend/src/components/{ui,layout,forms}
+                mkdir -p frontend/src/pages/{home,about,contact}
+                mkdir -p frontend/src/services/{api,auth}
+                mkdir -p frontend/src/types/{api,ui}
+                ;;
+            "vue")
+                mkdir -p frontend/{src/{components,views,composables,utils,services,types,assets},public}
+                mkdir -p frontend/src/components/{ui,layout,forms}
+                mkdir -p frontend/src/views/{home,about,contact}
+                mkdir -p frontend/src/services/{api,auth}
+                mkdir -p frontend/src/types/{api,ui}
+                ;;
+            "angular")
+                mkdir -p frontend/{src/{app/{components,pages,services,models,guards},assets,environments},public}
+                mkdir -p frontend/src/app/components/{ui,layout,forms}
+                mkdir -p frontend/src/app/pages/{home,about,contact}
+                mkdir -p frontend/src/app/services/{api,auth}
+                mkdir -p frontend/src/app/models/{api,ui}
+                ;;
+            "nextjs")
+                mkdir -p frontend/{src/{app,components,lib,types,styles},public}
+                mkdir -p frontend/src/components/{ui,layout,forms}
+                mkdir -p frontend/src/lib/{api,auth}
+                mkdir -p frontend/src/types/{api,ui}
+                ;;
+        esac
+    else
+        log_info "Backend-only project - skipping frontend structure"
+    fi
+    
+    # Create backend structure based on framework
+    log_info "Creating backend structure for $BACKEND_FRAMEWORK..."
+    case $BACKEND_FRAMEWORK in
+        "node")
+            mkdir -p backend/{src/{controllers,middleware,models,routes,services,utils,config},tests}
+            mkdir -p backend/src/services/{api,auth,database}
+            mkdir -p backend/src/models/{user,product}
+            mkdir -p backend/src/controllers/{auth,user,product}
+            mkdir -p backend/{migrations,seeds,scripts}
             ;;
-        --description|-d)
-            PROJECT_DESCRIPTION="$2"
-            shift 2
+        "python")
+            mkdir -p backend/{app/{api,core,models,schemas,services,utils},tests}
+            mkdir -p backend/app/api/{v1,endpoints}
+            mkdir -p backend/app/core/{config,security}
+            mkdir -p backend/{migrations,scripts}
             ;;
-        --frontend|-f)
-            FRONTEND_FRAMEWORK="$2"
-            validate_choice "$FRONTEND_FRAMEWORK" "react vue angular nextjs" "frontend framework"
-            shift 2
+        "dotnet")
+            mkdir -p backend/{Controllers,Models,Services,Data,Configuration}
+            mkdir -p backend/{Migrations,Scripts}
             ;;
-        --backend|-b)
-            BACKEND_FRAMEWORK="$2"
-            validate_choice "$BACKEND_FRAMEWORK" "node python dotnet java" "backend framework"
-            shift 2
-            ;;
-        --database|-db)
-            DATABASE="$2"
-            validate_choice "$DATABASE" "postgresql mysql mongodb sqlite" "database"
-            shift 2
-            ;;
-        --deployment|-dep)
-            DEPLOYMENT="$2"
-            validate_choice "$DEPLOYMENT" "docker kubernetes serverless" "deployment"
-            shift 2
-            ;;
-        --template|-t)
-            PROJECT_TEMPLATE="$2"
-            validate_choice "$PROJECT_TEMPLATE" "saas ecommerce api dashboard mobile" "project template"
-            apply_template "$PROJECT_TEMPLATE"
-            shift 2
-            ;;
-        --environment|-e)
-            ENVIRONMENT="$2"
-            validate_choice "$ENVIRONMENT" "development staging production" "environment"
-            shift 2
-            ;;
-        --interactive|-i)
-            INTERACTIVE_MODE=true
-            shift
-            ;;
-        --help|-h)
-            show_help
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}❌ Unknown option: $1${NC}"
-            show_help
-            exit 1
+        "java")
+            mkdir -p backend/src/main/java/com/example/{controller,service,model,repository,config}
+            mkdir -p backend/src/test/java/com/example
+            mkdir -p backend/{migrations,scripts}
             ;;
     esac
-done
+    
+    log_success "Project structure created successfully!"
+}
 
-# Run interactive setup if requested
-if [ "$INTERACTIVE_MODE" = true ]; then
-    interactive_setup
-fi
-
-# Display configuration
-echo -e "${BLUE}🚀 Initializing Project: $PROJECT_NAME${NC}"
-echo -e "${BLUE}=====================================${NC}"
-echo -e "${YELLOW}Project:${NC} $PROJECT_NAME"
-echo -e "${YELLOW}Description:${NC} $PROJECT_DESCRIPTION"
-echo -e "${YELLOW}Frontend:${NC} $FRONTEND_FRAMEWORK"
-echo -e "${YELLOW}Backend:${NC} $BACKEND_FRAMEWORK"
-echo -e "${YELLOW}Database:${NC} $DATABASE"
-echo -e "${YELLOW}Deployment:${NC} $DEPLOYMENT"
-echo -e "${YELLOW}Environment:${NC} $ENVIRONMENT"
-echo ""
-
-# Check if project directory already exists
-if [ -d "$PROJECT_NAME" ]; then
-    echo -e "${RED}❌ Project directory '$PROJECT_NAME' already exists!${NC}"
-    echo -e "${YELLOW}Please remove it or choose a different name.${NC}"
-  exit 1
-fi
-
-# Create project directory
-echo -e "${BLUE}📁 Creating project structure...${NC}"
-mkdir -p "$PROJECT_NAME"
-cd "$PROJECT_NAME"
-
-# Create main project structure
-mkdir -p {backend,docs,scripts,tests,assets}
-
-# Create frontend structure only if needed
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    mkdir -p frontend
-    echo -e "${BLUE}📁 Creating frontend structure for $FRONTEND_FRAMEWORK...${NC}"
-    case $FRONTEND_FRAMEWORK in
-        "react")
-            mkdir -p frontend/{src/{components,pages,hooks,utils,services,types,assets},public}
-            mkdir -p frontend/src/components/{ui,layout,forms}
-            mkdir -p frontend/src/pages/{home,about,contact}
-            mkdir -p frontend/src/services/{api,auth}
-            mkdir -p frontend/src/types/{api,ui}
-            ;;
-        "vue")
-            mkdir -p frontend/{src/{components,views,composables,utils,services,types,assets},public}
-            mkdir -p frontend/src/components/{ui,layout,forms}
-            mkdir -p frontend/src/views/{home,about,contact}
-            mkdir -p frontend/src/services/{api,auth}
-            mkdir -p frontend/src/types/{api,ui}
-            ;;
-        "angular")
-            mkdir -p frontend/{src/{app/{components,pages,services,models,guards},assets,environments},public}
-            mkdir -p frontend/src/app/components/{ui,layout,forms}
-            mkdir -p frontend/src/app/pages/{home,about,contact}
-            mkdir -p frontend/src/app/services/{api,auth}
-            mkdir -p frontend/src/app/models/{api,ui}
-            ;;
-        "nextjs")
-            mkdir -p frontend/{src/{app,components,lib,types,styles},public}
-            mkdir -p frontend/src/components/{ui,layout,forms}
-            mkdir -p frontend/src/lib/{api,auth}
-            mkdir -p frontend/src/types/{api,ui}
-            ;;
-    esac
-else
-    echo -e "${BLUE}📁 Backend-only project - skipping frontend structure${NC}"
-fi
-
-# Create backend structure based on framework
-echo -e "${BLUE}📁 Creating backend structure for $BACKEND_FRAMEWORK...${NC}"
-case $BACKEND_FRAMEWORK in
-    "node")
-        mkdir -p backend/{src/{controllers,middleware,models,routes,services,utils,config},tests}
-        mkdir -p backend/src/services/{api,auth,database}
-        mkdir -p backend/src/models/{user,product}
-        mkdir -p backend/src/controllers/{auth,user,product}
-        mkdir -p backend/{migrations,seeds}
-        ;;
-    "python")
-        mkdir -p backend/{app/{api,core,models,schemas,services,utils},tests}
-        mkdir -p backend/app/api/{endpoints,dependencies}
-        mkdir -p backend/app/core/{config,security}
-mkdir -p backend/app/models
-mkdir -p backend/app/schemas
-        mkdir -p backend/app/services/{api,auth,database}
-        ;;
-    "dotnet")
-        mkdir -p backend/{Controllers,Models,Services,Data,Configuration}
-        mkdir -p backend/Controllers
-        mkdir -p backend/Models
-        mkdir -p backend/Services
-        mkdir -p backend/Data
-        mkdir -p backend/Configuration
-        ;;
-    "java")
-        mkdir -p backend/src/main/java/{controllers,models,services,repositories,config}
-        mkdir -p backend/src/main/resources
-        mkdir -p backend/src/test/java
-        mkdir -p backend/src/main/java/controllers
-        mkdir -p backend/src/main/java/models
-        mkdir -p backend/src/main/java/services
-        mkdir -p backend/src/main/java/repositories
-        mkdir -p backend/src/main/java/config
-        ;;
-esac
-
-# Create documentation structure
-mkdir -p docs/{api,deployment,development,user-guide}
-
-# Create essential files
-echo -e "${BLUE}📝 Creating configuration files...${NC}"
-
-# Root level files - adjust scripts based on whether frontend exists
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    cat > package.json << EOF
+# Function to create configuration files
+create_configuration_files() {
+    log_info "Creating configuration files..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create configuration files"
+        return
+    fi
+    
+    # Create root package.json for monorepo
+    cat > package.json << 'EOF'
 {
-  "name": "$PROJECT_NAME",
+  "name": "'$PROJECT_NAME'",
   "version": "1.0.0",
-  "description": "$PROJECT_DESCRIPTION",
-  "main": "index.js",
+  "description": "'$PROJECT_DESCRIPTION'",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
+    "install:all": "npm install && npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:frontend": "cd frontend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",
-    "build": "cd frontend && npm run build",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
     "test": "npm run test:frontend && npm run test:backend",
     "test:frontend": "cd frontend && npm test",
     "test:backend": "cd backend && npm test",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "setup:db": "cd backend && npm run db:setup",
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:frontend": "cd frontend && npm run lint",
-    "lint:backend": "cd backend && npm run lint"
+    "lint:backend": "cd backend && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "prepare": "husky install"
   },
-  "keywords": ["web-app", "monorepo", "$FRONTEND_FRAMEWORK", "$BACKEND_FRAMEWORK"],
-  "author": "Your Team",
-  "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
-}
-EOF
-else
-    cat > package.json << EOF
-{
-  "name": "$PROJECT_NAME",
-  "version": "1.0.0",
-  "description": "$PROJECT_DESCRIPTION",
-  "main": "index.js",
-  "scripts": {
-    "dev": "npm run dev:backend",
-    "dev:backend": "cd backend && npm run dev",
-    "test": "npm run test:backend",
-    "test:backend": "cd backend && npm test",
-    "install:all": "npm install && cd backend && npm install",
-    "setup:db": "cd backend && npm run db:setup",
-    "lint": "npm run lint:backend",
-    "lint:backend": "cd backend && npm run lint"
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0"
   },
-  "keywords": ["api", "backend", "$BACKEND_FRAMEWORK"],
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  },
+  "keywords": ["monorepo", "fullstack", "webapp"],
   "author": "Your Team",
   "license": "MIT"
 }
 EOF
-fi
 
-# Create frontend package.json only if needed
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    echo -e "${BLUE}📝 Creating frontend configuration for $FRONTEND_FRAMEWORK...${NC}"
-    case $FRONTEND_FRAMEWORK in
-        "react")
-            cat > frontend/package.json << 'EOF'
-{
-  "name": "frontend",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.1",
-    "axios": "^1.6.2",
-    "tailwindcss": "^3.3.6"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.8",
-    "@vitejs/plugin-react": "^4.2.1"
-  },
-  "scripts": {
-    "start": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "lint": "eslint src --ext .ts,.tsx"
-  }
-}
-EOF
-            ;;
-        "vue")
-            cat > frontend/package.json << 'EOF'
-{
-  "name": "frontend",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "vue": "^3.3.0",
-    "vue-router": "^4.2.0",
-    "axios": "^1.6.2",
-    "tailwindcss": "^3.3.6"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^4.4.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.8"
-  },
-  "scripts": {
-    "start": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "lint": "eslint src --ext .vue,.ts"
-  }
-}
-EOF
-            ;;
-        "angular")
-            cat > frontend/package.json << 'EOF'
-{
-  "name": "frontend",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "@angular/core": "^17.0.0",
-    "@angular/common": "^17.0.0",
-    "@angular/router": "^17.0.0",
-    "@angular/platform-browser": "^17.0.0"
-  },
-  "devDependencies": {
-    "@angular/cli": "^17.0.0",
-    "@angular/compiler-cli": "^17.0.0",
-    "typescript": "^5.3.3"
-  },
-  "scripts": {
-    "start": "ng serve",
-    "build": "ng build",
-    "test": "ng test",
-    "lint": "ng lint"
-  }
-}
-EOF
-            ;;
-        "nextjs")
-            cat > frontend/package.json << 'EOF'
-{
-  "name": "frontend",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "axios": "^1.6.2",
-    "tailwindcss": "^3.3.6"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18",
-    "typescript": "^5.3.3"
-  },
-  "scripts": {
-    "start": "next dev",
-    "build": "next build",
-    "test": "jest",
-    "lint": "next lint"
-  }
-}
-EOF
-            ;;
-    esac
-fi
+    # Create .gitignore
+    cat > .gitignore << 'EOF'
+# Dependencies
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
 
-# Create backend package.json based on framework
-echo -e "${BLUE}📝 Creating backend configuration for $BACKEND_FRAMEWORK...${NC}"
-case $BACKEND_FRAMEWORK in
-    "node")
-        cat > backend/package.json << 'EOF'
-{
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "Backend API",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest",
-    "lint": "eslint src",
-    "db:setup": "./scripts/migrate.sh"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "dotenv": "^16.3.1",
-    "axios": "^1.6.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0",
-    "eslint": "^8.55.0"
-  },
-  "keywords": ["api", "backend", "express", "nodejs"],
-  "author": "Your Team",
-  "license": "MIT"
+# Production builds
+build/
+dist/
+*/build/
+*/dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*/env/
+*/env/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+
+# Kubernetes
+*.kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+.gradle/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# IDE
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
+
+    # Create README.md
+    cat > README.md << 'EOF'
+# '$PROJECT_NAME'
+
+'$PROJECT_DESCRIPTION'
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ (for frontend and Node.js backend)
+- Docker (for containerized deployment)
+- Git
+
+### Installation
+
+1. **Clone and navigate to the project:**
+   ```bash
+   cd '$PROJECT_NAME'
+   ```
+
+2. **Install all dependencies:**
+   ```bash
+   npm run install:all
+   ```
+
+3. **Set up environment variables:**
+   ```bash
+   cp backend/.env.'$ENVIRONMENT' backend/.env
+   ```
+EOF
+
+    if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
+        cat >> README.md << 'EOF'
+   cp frontend/.env.'$ENVIRONMENT' frontend/.env
+EOF
+    fi
+
+    cat >> README.md << 'EOF'
+
+4. **Set up database:**
+   ```bash
+   cd backend && ./scripts/migrate.sh
+   ```
+
+5. **Start development environment:**
+   ```bash
+   ./scripts/start-'$ENVIRONMENT'.sh local
+   ```
+
+## 🏗️ Project Structure
+
+```
+'$PROJECT_NAME'/
+├── frontend/          # Frontend application
+├── backend/           # Backend API
+├── docs/             # Documentation
+├── scripts/          # Development scripts
+├── tests/            # Integration tests
+└── assets/           # Static assets
+```
+
+## 🛠️ Tech Stack
+
+- **Frontend:** '${FRONTEND_FRAMEWORK:-"None"}'
+- **Backend:** '$BACKEND_FRAMEWORK'
+- **Database:** '$DATABASE'
+- **Deployment:** '$DEPLOYMENT'
+- **Environment:** '$ENVIRONMENT'
+
+## 📚 Documentation
+
+- [Development Guide](docs/development/README.md)
+- [API Documentation](docs/api/README.md)
+- [Deployment Guide](docs/deployment/README.md)
+- [Contributing Guidelines](docs/contributing/README.md)
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+./scripts/start-'$ENVIRONMENT'.sh local
+```
+
+### Docker
+```bash
+./scripts/start-'$ENVIRONMENT'.sh docker
+```
+
+### Production
+```bash
+./scripts/deploy-production.sh
+```
+
+## 🤝 Contributing
+
+Please read [CONTRIBUTING.md](docs/contributing/README.md) for details on our code of conduct and the process for submitting pull requests.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+EOF
+
+    log_success "Configuration files created successfully!"
 }
-EOF
-        ;;
-    "python")
-        cat > backend/requirements.txt << 'EOF'
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
-pydantic==2.5.0
-python-dotenv==1.0.0
-requests==2.31.0
-pytest==7.4.3
-black==23.11.0
-flake8==6.1.0
-EOF
-        ;;
-    "dotnet")
-        cat > backend/backend.csproj << 'EOF'
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-  </ItemGroup>
-</Project>
-EOF
-        ;;
-    "java")
-        cat > backend/pom.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
-    </parent>
-    <groupId>com.example</groupId>
-    <artifactId>backend</artifactId>
-    <version>1.0.0</version>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-    </dependencies>
-</project>
-EOF
-        ;;
-esac
 
-# Environment-specific configurations
-echo -e "${BLUE}🔧 Setting up $ENVIRONMENT environment...${NC}"
-
-# Create environment-specific Docker configurations
-case $ENVIRONMENT in
-    "development")
-        # Development Docker setup
-        cat > docker-compose.yml << EOF
+# Function to create environment-specific files
+create_environment_files() {
+    log_info "Setting up $ENVIRONMENT environment..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create environment files for $ENVIRONMENT"
+        return
+    fi
+    
+    # Create environment-specific Docker Compose files
+    case $ENVIRONMENT in
+        "development")
+            cat > docker-compose.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -713,81 +799,44 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=development
-      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:password@db:5432/'$PROJECT_NAME'_dev
     volumes:
       - ./backend:/app
       - /app/node_modules
     depends_on:
-      - database
+      - db
     command: npm run dev
 
-  database:
-    image: postgres:15-alpine
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_DB: ${PROJECT_NAME}_dev
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      - REACT_APP_API_URL=http://localhost:3001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB='$PROJECT_NAME'_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
 volumes:
   postgres_data:
-  redis_data:
 EOF
-
-        # Development environment file
-        cat > backend/.env.development << EOF
-# Development Environment Configuration
-NODE_ENV=development
-PORT=3001
-
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=${PROJECT_NAME}_dev
-DB_USER=postgres
-DB_PASSWORD=password
-
-# Redis Configuration
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# JWT Configuration
-JWT_SECRET=dev-secret-key-change-in-production
-JWT_EXPIRES_IN=24h
-
-# CORS Configuration
-CORS_ORIGIN=http://localhost:3000
-
-# Logging
-LOG_LEVEL=debug
-ENABLE_DEBUG=true
-EOF
-
-        # Development frontend environment file (if frontend exists)
-        if [ -n "$FRONTEND_FRAMEWORK" ]; then
-            cat > frontend/.env.development << EOF
-# Development Environment Configuration
-VITE_API_URL=http://localhost:3001
-VITE_ENVIRONMENT=development
-VITE_DEBUG=true
-VITE_ENABLE_LOGGING=true
-EOF
-        fi
-        ;;
-
-    "staging")
-        # Staging Docker setup
-        cat > docker-compose.staging.yml << EOF
+            ;;
+        "staging")
+            cat > docker-compose.staging.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -797,76 +846,34 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=staging
-      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:password@db:5432/'$PROJECT_NAME'_staging
     depends_on:
-      - database
-    restart: unless-stopped
+      - db
 
-  database:
-    image: postgres:15-alpine
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_DB: ${PROJECT_NAME}_staging
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${PROJECT_NAME}_staging_pass
+      - REACT_APP_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB='$PROJECT_NAME'_staging
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
     volumes:
       - postgres_staging_data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_staging_data:/data
-    restart: unless-stopped
 
 volumes:
   postgres_staging_data:
-  redis_staging_data:
 EOF
-
-        # Staging environment file
-        cat > backend/.env.staging << EOF
-# Staging Environment Configuration
-NODE_ENV=staging
-PORT=3001
-
-# Database Configuration
-DB_HOST=database
-DB_PORT=5432
-DB_NAME=${PROJECT_NAME}_staging
-DB_USER=postgres
-DB_PASSWORD=${PROJECT_NAME}_staging_pass
-
-# Redis Configuration
-REDIS_HOST=redis
-REDIS_PORT=6379
-
-# JWT Configuration
-JWT_SECRET=staging-secret-key-change-in-production
-JWT_EXPIRES_IN=24h
-
-# CORS Configuration
-CORS_ORIGIN=https://staging.${PROJECT_NAME}.com
-
-# Logging
-LOG_LEVEL=info
-ENABLE_DEBUG=false
-EOF
-
-        # Staging frontend environment file (if frontend exists)
-        if [ -n "$FRONTEND_FRAMEWORK" ]; then
-            cat > frontend/.env.staging << EOF
-# Staging Environment Configuration
-VITE_API_URL=https://api-staging.${PROJECT_NAME}.com
-VITE_ENVIRONMENT=staging
-VITE_DEBUG=false
-VITE_ENABLE_LOGGING=true
-EOF
-        fi
-        ;;
-
-    "production")
-        # Production Docker setup
-        cat > docker-compose.production.yml << EOF
+            ;;
+        "production")
+            cat > docker-compose.production.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -876,261 +883,202 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:password@db:5432/'$PROJECT_NAME'_prod
     depends_on:
-      - database
-    restart: always
-    deploy:
-      replicas: 2
+      - db
+    restart: unless-stopped
 
-  database:
-    image: postgres:15-alpine
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_DB: ${PROJECT_NAME}_prod
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${PROJECT_NAME}_prod_pass
+      - REACT_APP_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB='$PROJECT_NAME'_prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
     volumes:
       - postgres_prod_data:/var/lib/postgresql/data
-    restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_prod_data:/data
-    restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
+    restart: unless-stopped
 
 volumes:
   postgres_prod_data:
-  redis_prod_data:
 EOF
-
-        # Production environment file
-        cat > backend/.env.production << EOF
-# Production Environment Configuration
-NODE_ENV=production
+            ;;
+    esac
+    
+    # Create backend environment file
+    cat > backend/.env.$ENVIRONMENT << 'EOF'
+# '$ENVIRONMENT' Environment Configuration
+NODE_ENV='$ENVIRONMENT'
 PORT=3001
 
 # Database Configuration
-DB_HOST=database
-DB_PORT=5432
-DB_NAME=${PROJECT_NAME}_prod
-DB_USER=postgres
-DB_PASSWORD=${PROJECT_NAME}_prod_pass
-
-# Redis Configuration
-REDIS_HOST=redis
-REDIS_PORT=6379
+DATABASE_URL=postgresql://postgres:password@localhost:5432/'$PROJECT_NAME'_'$ENVIRONMENT'
 
 # JWT Configuration
-JWT_SECRET=CHANGE_THIS_TO_A_SECURE_SECRET
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRES_IN=24h
 
 # CORS Configuration
-CORS_ORIGIN=https://${PROJECT_NAME}.com
+CORS_ORIGIN=http://localhost:3000
 
 # Logging
-LOG_LEVEL=warn
-ENABLE_DEBUG=false
+LOG_LEVEL=info
+
+# API Configuration
+API_VERSION=v1
+API_PREFIX=/api
+
+# Security
+BCRYPT_ROUNDS=12
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 EOF
 
-        # Production frontend environment file (if frontend exists)
-        if [ -n "$FRONTEND_FRAMEWORK" ]; then
-            cat > frontend/.env.production << EOF
-# Production Environment Configuration
-VITE_API_URL=https://api.${PROJECT_NAME}.com
-VITE_ENVIRONMENT=production
-VITE_DEBUG=false
-VITE_ENABLE_LOGGING=false
+    # Create frontend environment file if frontend exists
+    if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
+        cat > frontend/.env.$ENVIRONMENT << 'EOF'
+# '$ENVIRONMENT' Environment Configuration
+REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_ENVIRONMENT='$ENVIRONMENT'
+REACT_APP_VERSION=1.0.0
 EOF
-        fi
-        ;;
-esac
+    fi
+    
+    log_success "$ENVIRONMENT environment configured successfully!"
+}
 
-# Create environment-specific Dockerfile for backend
-cat > backend/Dockerfile << EOF
-FROM node:18-alpine
+# Function to create development scripts
+create_development_scripts() {
+    log_info "Creating development scripts..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create development scripts"
+        return
+    fi
+    
+    # Create start script for the current environment
+    cat > scripts/start-$ENVIRONMENT.sh << 'EOF'
+#!/bin/zsh
+# Start script for '$ENVIRONMENT' environment
 
-WORKDIR /app
+set -e
 
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Change ownership
-RUN chown -R nodejs:nodejs /app
-USER nodejs
-
-# Expose port
-EXPOSE 3001
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
-  CMD curl -f http://localhost:3001/health || exit 1
-
-# Start the application
-CMD ["npm", "start"]
-EOF
-
-# Create environment-specific scripts
-cat > scripts/start-${ENVIRONMENT}.sh << EOF
-#!/bin/bash
-# Start script for $ENVIRONMENT environment
+ENVIRONMENT="'$ENVIRONMENT'"
+PROJECT_NAME="'$PROJECT_NAME'"
 
 echo "🚀 Starting $PROJECT_NAME in $ENVIRONMENT mode..."
 
-case "\$1" in
+case "$1" in
+    "local")
+        echo "📦 Installing dependencies..."
+        npm run install:all
+        
+        echo "🔧 Setting up environment..."
+        cp backend/.env.$ENVIRONMENT backend/.env
+EOF
+
+    if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
+        cat >> scripts/start-$ENVIRONMENT.sh << 'EOF'
+        cp frontend/.env.$ENVIRONMENT frontend/.env
+EOF
+    fi
+
+    cat >> scripts/start-$ENVIRONMENT.sh << 'EOF'
+        
+        echo "🗄️  Starting database..."
+        docker-compose up -d db
+        
+        echo "⏳ Waiting for database to be ready..."
+        sleep 5
+        
+        echo "🔄 Running database migrations..."
+        cd backend && ./scripts/migrate.sh && cd ..
+        
+        echo "🚀 Starting development servers..."
+        npm run dev
+        ;;
     "docker")
         echo "🐳 Starting with Docker Compose..."
-        docker-compose -f docker-compose.${ENVIRONMENT}.yml up -d
-        ;;
-    "local")
-        echo "💻 Starting locally..."
-        cd backend
-        cp .env.${ENVIRONMENT} .env
-        npm install
-        npm run dev &
-        BACKEND_PID=\$!
-        
-        if [ -d "../frontend" ]; then
-            cd ../frontend
-            cp .env.${ENVIRONMENT} .env
-            npm install
-            npm run dev &
-            FRONTEND_PID=\$!
-            echo "Frontend PID: \$FRONTEND_PID"
-        fi
-        
-        echo "Backend PID: \$BACKEND_PID"
-        echo "Press Ctrl+C to stop all services"
-        
-        trap "kill \$BACKEND_PID \$FRONTEND_PID 2>/dev/null" INT
-        wait
+        docker-compose up --build
         ;;
     *)
-        echo "Usage: \$0 {docker|local}"
+        echo "Usage: $0 {local|docker}"
+        echo "  local  - Start with local dependencies"
         echo "  docker - Start with Docker Compose"
-        echo "  local  - Start locally with npm"
         exit 1
         ;;
 esac
 EOF
 
-chmod +x scripts/start-${ENVIRONMENT}.sh
-
-# Create environment-specific deployment scripts
-case $ENVIRONMENT in
-    "development")
-        # Development deployment is just local setup
-        cat > scripts/deploy-dev.sh << EOF
-#!/bin/bash
-echo "🔧 Setting up development environment..."
-echo "📦 Installing dependencies..."
-npm run install:all
-echo "🔐 Setting up environment variables..."
-cp backend/.env.development backend/.env
-if [ -d "frontend" ]; then
-    cp frontend/.env.development frontend/.env
-fi
-echo "🗄️ Setting up database..."
-cd backend && ./scripts/migrate.sh
-echo "✅ Development environment ready!"
-echo "🚀 Run: npm run dev"
-EOF
-        chmod +x scripts/deploy-dev.sh
-        ;;
+    chmod +x scripts/start-$ENVIRONMENT.sh
     
-    "staging")
-        # Staging deployment script
-        cat > scripts/deploy-staging.sh << EOF
-#!/bin/bash
+    # Create deployment scripts
+    cat > scripts/deploy-dev.sh << 'EOF'
+#!/bin/zsh
+# Deploy to development environment
+
+echo "🚀 Deploying to development environment..."
+# Add your deployment logic here
+EOF
+
+    cat > scripts/deploy-staging.sh << 'EOF'
+#!/bin/zsh
+# Deploy to staging environment
+
 echo "🚀 Deploying to staging environment..."
-
-# Build and push Docker images
-docker build -t ${PROJECT_NAME}-backend:staging ./backend
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "docker build -t ${PROJECT_NAME}-frontend:staging ./frontend"; fi)
-
-# Deploy with Docker Compose
-docker-compose -f docker-compose.staging.yml down
-docker-compose -f docker-compose.staging.yml up -d
-
-echo "✅ Staging deployment complete!"
-echo "🌐 Backend: http://staging-api.${PROJECT_NAME}.com"
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "echo \"🌐 Frontend: http://staging.${PROJECT_NAME}.com\""; fi)
+# Add your deployment logic here
 EOF
-        chmod +x scripts/deploy-staging.sh
-        ;;
-    
-    "production")
-        # Production deployment script
-        cat > scripts/deploy-production.sh << EOF
-#!/bin/bash
+
+    cat > scripts/deploy-production.sh << 'EOF'
+#!/bin/zsh
+# Deploy to production environment
+
 echo "🚀 Deploying to production environment..."
-
-# Build and push Docker images
-docker build -t ${PROJECT_NAME}-backend:latest ./backend
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "docker build -t ${PROJECT_NAME}-frontend:latest ./frontend"; fi)
-
-# Deploy with Docker Compose
-docker-compose -f docker-compose.production.yml down
-docker-compose -f docker-compose.production.yml up -d
-
-echo "✅ Production deployment complete!"
-echo "🌐 Backend: https://api.${PROJECT_NAME}.com"
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "echo \"🌐 Frontend: https://${PROJECT_NAME}.com\""; fi)
+# Add your deployment logic here
 EOF
-        chmod +x scripts/deploy-production.sh
-        ;;
-esac
 
-# Create CI/CD templates
-echo -e "${BLUE}🔧 Setting up CI/CD workflows...${NC}"
+    chmod +x scripts/deploy-*.sh
+    
+    log_success "Development scripts created successfully!"
+}
 
-# Create GitHub Actions directory
-mkdir -p .github/workflows
-
-# Base workflow for all environments
-cat > .github/workflows/ci.yml << EOF
-name: CI/CD Pipeline
+# Function to create CI/CD workflows
+create_cicd_workflows() {
+    log_info "Setting up CI/CD workflows..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create CI/CD workflows"
+        return
+    fi
+    
+    mkdir -p .github/workflows
+    
+    # Create main CI workflow
+    cat > .github/workflows/ci.yml << 'EOF'
+name: CI
 
 on:
   push:
-    branches: [ main, develop, staging ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop, staging ]
-
-env:
-  NODE_VERSION: '18'
-  POSTGRES_VERSION: '15'
+    branches: [ main, develop ]
 
 jobs:
-  lint-and-test:
-    name: Lint and Test
+  test:
     runs-on: ubuntu-latest
     
     services:
       postgres:
-        image: postgres:\${{ env.POSTGRES_VERSION }}
+        image: postgres:15
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
@@ -1141,775 +1089,132 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: \${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: |
-        npm ci
-        if [ -d "backend" ]; then
-          cd backend && npm ci
-        fi
-        if [ -d "frontend" ]; then
-          cd frontend && npm ci
-        fi
-
-    - name: Run linting
-      run: |
-        npm run lint
-        if [ -d "backend" ]; then
-          cd backend && npm run lint
-        fi
-        if [ -d "frontend" ]; then
-          cd frontend && npm run lint
-        fi
-
-    - name: Run tests
-      env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_NAME: test_db
-        DB_USER: postgres
-        DB_PASSWORD: postgres
-        REDIS_HOST: localhost
-        REDIS_PORT: 6379
-      run: |
-        npm run test
-        if [ -d "backend" ]; then
-          cd backend && npm run test
-        fi
-        if [ -d "frontend" ]; then
-          cd frontend && npm run test
-        fi
-
-    - name: Build application
-      run: |
-        if [ -d "backend" ]; then
-          cd backend && npm run build
-        fi
-        if [ -d "frontend" ]; then
-          cd frontend && npm run build
-        fi
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: lint-and-test
+    - uses: actions/checkout@v4
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: \${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run security audit
-      run: npm audit --audit-level moderate
-
-    - name: Run SAST scan
-      uses: github/codeql-action/init@v3
-      with:
-        languages: javascript
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-EOF
-
-# Environment-specific deployment workflows
-case $ENVIRONMENT in
-    "development")
-        cat > .github/workflows/deploy-development.yml << EOF
-name: Deploy to Development
-
-on:
-  push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
-
-jobs:
-  deploy-dev:
-    name: Deploy to Development
-    runs-on: ubuntu-latest
-    needs: [lint-and-test, security-scan]
-    environment: development
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: \${{ secrets.CONTAINER_REGISTRY }}
-        username: \${{ secrets.REGISTRY_USERNAME }}
-        password: \${{ secrets.REGISTRY_PASSWORD }}
-
-    - name: Build and push backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        push: true
-        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:dev-\${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
-echo "    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        push: true
-        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:dev-\${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max"
-fi)
-
-    - name: Deploy to development environment
-      run: |
-        echo "Deploying to development environment..."
-        # Add your deployment commands here
-        # Example: kubectl apply -f k8s/development/
-        # or: docker-compose -f docker-compose.yml up -d
-EOF
-        ;;
-
-    "staging")
-        cat > .github/workflows/deploy-staging.yml << EOF
-name: Deploy to Staging
-
-on:
-  push:
-    branches: [ staging ]
-  pull_request:
-    branches: [ staging ]
-
-jobs:
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: [lint-and-test, security-scan]
-    environment: staging
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: \${{ secrets.CONTAINER_REGISTRY }}
-        username: \${{ secrets.REGISTRY_USERNAME }}
-        password: \${{ secrets.REGISTRY_PASSWORD }}
-
-    - name: Build and push backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        push: true
-        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:staging-\${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
-echo "    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        push: true
-        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:staging-\${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max"
-fi)
-
-    - name: Deploy to staging environment
-      run: |
-        echo "Deploying to staging environment..."
-        # Add your deployment commands here
-        # Example: kubectl apply -f k8s/staging/
-        # or: docker-compose -f docker-compose.staging.yml up -d
-
-    - name: Run integration tests
-      run: |
-        echo "Running integration tests against staging..."
-        # Add integration test commands here
-        # Example: npm run test:integration -- --baseUrl=https://staging.example.com
-EOF
-        ;;
-
-    "production")
-        cat > .github/workflows/deploy-production.yml << EOF
-name: Deploy to Production
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [lint-and-test, security-scan]
-    environment: production
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: \${{ secrets.CONTAINER_REGISTRY }}
-        username: \${{ secrets.REGISTRY_USERNAME }}
-        password: \${{ secrets.REGISTRY_PASSWORD }}
-
-    - name: Build and push backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        push: true
-        tags: |
-          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:latest
-          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:prod-\${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
-echo "    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        push: true
-        tags: |
-          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:latest
-          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:prod-\${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max"
-fi)
-
-    - name: Deploy to production environment
-      run: |
-        echo "Deploying to production environment..."
-        # Add your deployment commands here
-        # Example: kubectl apply -f k8s/production/
-        # or: docker-compose -f docker-compose.production.yml up -d
-
-    - name: Run smoke tests
-      run: |
-        echo "Running smoke tests against production..."
-        # Add smoke test commands here
-        # Example: npm run test:smoke -- --baseUrl=https://example.com
-
-    - name: Notify deployment success
-      if: success()
-      run: |
-        echo "Production deployment successful!"
-        # Add notification commands here (Slack, email, etc.)
-EOF
-        ;;
-esac
-
-# Create release workflow
-cat > .github/workflows/release.yml << EOF
-name: Create Release
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: \${{ github.ref }}
-        release_name: Release \${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Generate changelog
-      run: |
-        echo "Generating changelog..."
-        # Add changelog generation commands here
-        # Example: npx conventional-changelog-cli -p angular -i CHANGELOG.md -s
-
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: \${{ steps.create-release.outputs.upload_url }}
-        asset_path: ./dist/app.zip
-        asset_name: app-\${{ github.ref_name }}.zip
-        asset_content_type: application/zip
-EOF
-
-# Create dependency update workflow
-cat > .github/workflows/dependency-update.yml << EOF
-name: Dependency Updates
-
-on:
-  schedule:
-    - cron: '0 2 * * 1'  # Every Monday at 2 AM
-  workflow_dispatch:
-
-jobs:
-  update-dependencies:
-    name: Update Dependencies
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm run install:all
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Run tests
+      run: npm run test
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+    
+    - name: Build project
+      run: npm run build
+EOF
 
-    - name: Check for outdated dependencies
-      run: |
-        npm outdated || true
-        if [ -d "backend" ]; then
-          cd backend && npm outdated || true
-        fi
-        if [ -d "frontend" ]; then
-          cd frontend && npm outdated || true
-        fi
+    # Create deployment workflows for each environment
+    cat > .github/workflows/deploy-$ENVIRONMENT.yml << 'EOF'
+name: Deploy to '$ENVIRONMENT'
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        token: \${{ secrets.GITHUB_TOKEN }}
-        commit-message: 'chore: update dependencies'
-        title: 'chore: update dependencies'
-        body: |
-          Automated dependency updates
-          
-          This PR updates outdated dependencies to their latest versions.
-          
-          Please review the changes and test thoroughly before merging.
-        branch: dependency-updates
-        delete-branch: true
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm run install:all
+    
+    - name: Build project
+      run: npm run build
+    
+    - name: Deploy to '$ENVIRONMENT'
+      run: |
+        echo "🚀 Deploying to '$ENVIRONMENT' environment..."
+        # Add your deployment logic here
+        # This could be deploying to AWS, GCP, Azure, etc.
 EOF
 
-# Create environment-specific secrets documentation
-mkdir -p docs/ci-cd
-cat > docs/ci-cd/README.md << EOF
-# CI/CD Configuration
-
-This project uses GitHub Actions for continuous integration and deployment.
-
-## Workflows
-
-### CI Pipeline (\`ci.yml\`)
-- Runs on all pushes and pull requests
-- Lints code and runs tests
-- Performs security scans
-- Builds the application
-
-### Deployment Workflows
-- **Development**: \`deploy-development.yml\` - Deploys to development environment
-- **Staging**: \`deploy-staging.yml\` - Deploys to staging environment  
-- **Production**: \`deploy-production.yml\` - Deploys to production environment
-
-### Release Management
-- **Release**: \`release.yml\` - Creates releases on tag push
-- **Dependencies**: \`dependency-update.yml\` - Automated dependency updates
-
-## Required Secrets
-
-Configure these secrets in your GitHub repository settings:
-
-### Container Registry
-- \`CONTAINER_REGISTRY\` - Your container registry URL (e.g., ghcr.io)
-- \`REGISTRY_USERNAME\` - Registry username
-- \`REGISTRY_PASSWORD\` - Registry password/token
-
-### Environment-Specific Secrets
-- \`DEV_DEPLOY_KEY\` - SSH key for development deployment
-- \`STAGING_DEPLOY_KEY\` - SSH key for staging deployment
-- \`PROD_DEPLOY_KEY\` - SSH key for production deployment
-
-### Optional Secrets
-- \`SLACK_WEBHOOK_URL\` - For deployment notifications
-- \`EMAIL_NOTIFICATION\` - For email notifications
-
-## Environment Configuration
-
-### Development
-- Automatic deployment on push to \`develop\` branch
-- No approval required
-- Quick feedback loop
-
-### Staging
-- Automatic deployment on push to \`staging\` branch
-- Integration tests run after deployment
-- Manual approval may be required
-
-### Production
-- Deployment on push to \`main\` branch
-- Manual approval required
-- Smoke tests run after deployment
-- Release notes generated
-
-## Local Development
-
-To test workflows locally:
-
-\`\`\`bash
-# Install act (GitHub Actions local runner)
-brew install act
-
-# Run specific workflow
-act push -W .github/workflows/ci.yml
-
-# Run with secrets
-act push --secret-file .secrets
-\`\`\`
-
-## Customization
-
-1. **Modify deployment steps** in the workflow files
-2. **Add environment-specific variables** in GitHub repository settings
-3. **Configure approval gates** in environment settings
-4. **Add custom notifications** in the workflow steps
-
-## Troubleshooting
-
-- Check workflow logs in GitHub Actions tab
-- Verify secrets are properly configured
-- Ensure environment protection rules are set up
-- Test workflows locally with \`act\`
-EOF
-
-# Create GitHub Actions configuration file
-cat > .github/actions.yml << EOF
-# GitHub Actions configuration
-# This file can be used to configure repository-wide settings
-
-# Enable required status checks for protected branches
-required_status_checks:
-  strict: true
-  contexts:
-    - lint-and-test
-    - security-scan
-
-# Required pull request reviews
-required_pull_request_reviews:
-  required_approving_review_count: 2
-  dismiss_stale_reviews: true
-  require_code_owner_reviews: true
-
-# Branch protection rules
-branch_protection_rules:
-  - pattern: main
-    required_status_checks:
-      strict: true
-      contexts:
-        - lint-and-test
-        - security-scan
-    required_pull_request_reviews:
-      required_approving_review_count: 2
-    enforce_admins: true
-    allow_force_pushes: false
-    allow_deletions: false
-
-  - pattern: staging
-    required_status_checks:
-      strict: true
-      contexts:
-        - lint-and-test
-        - security-scan
-    required_pull_request_reviews:
-      required_approving_review_count: 1
-    allow_force_pushes: false
-    allow_deletions: false
-EOF
-
-# Create README - adjust based on project type and environment
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    cat > README.md << EOF
-# $PROJECT_NAME
-
-$PROJECT_DESCRIPTION
-
-## 🚀 Quick Start
-
-1. **Install dependencies:**
-   \`\`\`bash
-   npm run install:all
-   \`\`\`
-
-2. **Set up environment variables:**
-   \`\`\`bash
-   cp backend/.env.${ENVIRONMENT} backend/.env
-   cp frontend/.env.${ENVIRONMENT} frontend/.env
-   \`\`\`
-
-3. **Start development servers:**
-   \`\`\`bash
-   npm run dev
-   \`\`\`
-
-## 🏗️ Project Structure
-
-\`\`\`
-$PROJECT_NAME/
-├── frontend/          # $FRONTEND_FRAMEWORK application
-├── backend/           # $BACKEND_FRAMEWORK API server
-├── docs/             # Documentation
-├── scripts/          # Utility scripts
-└── tests/            # Test files
-\`\`\`
-
-## 🛠️ Tech Stack
-
-- **Frontend**: $FRONTEND_FRAMEWORK
-- **Backend**: $BACKEND_FRAMEWORK
-- **Database**: $DATABASE
-- **Deployment**: $DEPLOYMENT
-- **Environment**: $ENVIRONMENT
-
-## 🌍 Environment Configuration
-
-This project is configured for **$ENVIRONMENT** environment with:
-- Environment-specific Docker configurations
-- Environment-specific environment files (.env.${ENVIRONMENT})
-- Appropriate security and debugging settings
-- Deployment scripts for $ENVIRONMENT
-
-### Environment-Specific Commands
-
-- **Start locally**: \`./scripts/start-${ENVIRONMENT}.sh local\`
-- **Start with Docker**: \`./scripts/start-${ENVIRONMENT}.sh docker\`
-- **Deploy**: \`./scripts/deploy-${ENVIRONMENT}.sh\`
-
-## 📝 License
-
-MIT
-EOF
-else
-    cat > README.md << EOF
-# $PROJECT_NAME
-
-$PROJECT_DESCRIPTION
-
-## 🚀 Quick Start
-
-1. **Install dependencies:**
-   \`\`\`bash
-   npm run install:all
-   \`\`\`
-
-2. **Set up environment variables:**
-   \`\`\`bash
-   cp backend/.env.${ENVIRONMENT} backend/.env
-   \`\`\`
-
-3. **Start development server:**
-   \`\`\`bash
-   npm run dev
-   \`\`\`
-
-## 🏗️ Project Structure
-
-\`\`\`
-$PROJECT_NAME/
-├── backend/           # $BACKEND_FRAMEWORK API server
-├── docs/             # Documentation
-├── scripts/          # Utility scripts
-└── tests/            # Test files
-\`\`\`
-
-## 🛠️ Tech Stack
-
-- **Backend**: $BACKEND_FRAMEWORK
-- **Database**: $DATABASE
-- **Deployment**: $DEPLOYMENT
-- **Environment**: $ENVIRONMENT
-
-## 🌍 Environment Configuration
-
-This project is configured for **$ENVIRONMENT** environment with:
-- Environment-specific Docker configurations
-- Environment-specific environment files (.env.${ENVIRONMENT})
-- Appropriate security and debugging settings
-- Deployment scripts for $ENVIRONMENT
-
-### Environment-Specific Commands
-
-- **Start locally**: \`./scripts/start-${ENVIRONMENT}.sh local\`
-- **Start with Docker**: \`./scripts/start-${ENVIRONMENT}.sh docker\`
-- **Deploy**: \`./scripts/deploy-${ENVIRONMENT}.sh\`
-
-## 📝 License
-
-MIT
-EOF
-fi
-
-# Create development guide
-cat > docs/development/README.md << EOF
-# Development Guide
-
-## Prerequisites
-
-- Node.js 18+
-- $DATABASE
-- Docker (optional)
-
-## Setup Instructions
-
-1. **Clone and install:**
-   ```bash
-   git clone <repository-url>
-   cd $PROJECT_NAME
-   npm run install:all
-   ```
-
-2. **Environment configuration:**
-   - Copy environment-specific .env files: \`cp backend/.env.${ENVIRONMENT} backend/.env\`
-   - Configure your settings for $ENVIRONMENT environment
-   - Ensure database connection details are correct
-
-3. **Database setup:**
-   ```bash
-   # Run migrations
-   cd backend
-   ./scripts/migrate.sh
-   ```
-
-4. **Start development:**
-   ```bash
-   npm run dev
-   ```
-
-## Development Workflow
-EOF
-
-# Append dynamic workflow section
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-  echo "1. **Frontend**: http://localhost:3000" >> docs/development/README.md
-fi
-echo "1. **Backend API**: http://localhost:3001" >> docs/development/README.md
-echo "2. **Database**: localhost:5432" >> docs/development/README.md
-if [ "$ENVIRONMENT" = "development" ]; then
-  echo "3. **Redis**: localhost:6379" >> docs/development/README.md
-fi
-
-echo "\n## Environment-Specific Features\n" >> docs/development/README.md
-echo "### $ENVIRONMENT Environment" >> docs/development/README.md
-case $ENVIRONMENT in
-  "development")
-    echo "- Hot reloading enabled" >> docs/development/README.md
-    echo "- Debug mode active" >> docs/development/README.md
-    echo "- Local database and Redis" >> docs/development/README.md
-    echo "- Development-specific environment variables" >> docs/development/README.md
-    ;;
-  "staging")
-    echo "- Production-like configuration" >> docs/development/README.md
-    echo "- Health checks enabled" >> docs/development/README.md
-    echo "- Restart policies configured" >> docs/development/README.md
-    echo "- Staging-specific environment variables" >> docs/development/README.md
-    ;;
-  "production")
-    echo "- Optimized for performance" >> docs/development/README.md
-    echo "- Multiple replicas configured" >> docs/development/README.md
-    echo "- Health checks and monitoring" >> docs/development/README.md
-    echo "- Production security settings" >> docs/development/README.md
-    echo "- Production-specific environment variables" >> docs/development/README.md
-    ;;
-esac
-
-echo "\n## Key Development Commands\n" >> docs/development/README.md
-echo "- \`npm run dev\` - Start $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "both frontend and backend"; else echo "backend server"; fi)" >> docs/development/README.md
-echo "- \`npm run test\` - Run all tests" >> docs/development/README.md
-echo "- \`npm run lint\` - Run linting" >> docs/development/README.md
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-  echo "- \`npm run build\` - Build for production" >> docs/development/README.md
-fi
-echo "- \`cd backend && ./scripts/migrate.sh\` - Run database migrations" >> docs/development/README.md
-
-echo "\n## Environment-Specific Commands\n" >> docs/development/README.md
-echo "- \`./scripts/start-${ENVIRONMENT}.sh local\` - Start locally" >> docs/development/README.md
-echo "- \`./scripts/start-${ENVIRONMENT}.sh docker\` - Start with Docker" >> docs/development/README.md
-echo "- \`./scripts/deploy-${ENVIRONMENT}.sh\` - Deploy to $ENVIRONMENT" >> docs/development/README.md
-
-echo "\n## Docker Commands\n" >> docs/development/README.md
-case $ENVIRONMENT in
-  "development")
-    echo "- \`docker-compose up\` - Start all services" >> docs/development/README.md
-    echo "- \`docker-compose up -d\` - Start in background" >> docs/development/README.md
-    echo "- \`docker-compose down\` - Stop all services" >> docs/development/README.md
-    ;;
-  "staging")
-    echo "- \`docker-compose -f docker-compose.staging.yml up -d\` - Start staging services" >> docs/development/README.md
-    echo "- \`docker-compose -f docker-compose.staging.yml down\` - Stop staging services" >> docs/development/README.md
-    ;;
-  "production")
-    echo "- \`docker-compose -f docker-compose.production.yml up -d\` - Start production services" >> docs/development/README.md
-    echo "- \`docker-compose -f docker-compose.production.yml down\` - Stop production services" >> docs/development/README.md
-    ;;
-esac
-
-# Database migration templates
-echo -e "${BLUE}📝 Creating database migration templates...${NC}"
-
-# Create migration directory structure
-mkdir -p backend/migrations
-mkdir -p backend/seeds
-mkdir -p backend/scripts
-
-# Initial migration file
-cat > backend/migrations/001_initial_schema.sql << EOF
--- Initial database schema for $PROJECT_NAME
+    log_success "CI/CD workflows created successfully!"
+}
+
+# Function to create final summary and next steps
+create_final_summary() {
+    echo ""
+    print -P "%F{green}🎉 Project '$PROJECT_NAME' created successfully!%f"
+    echo ""
+    print -P "%F{blue}📋 Next Steps:%f"
+    print -P "%F{yellow}1.%f Navigate to the project directory:"
+    print -P "   %F{green}cd $PROJECT_NAME%f"
+    echo ""
+    print -P "%F{yellow}2.%f Install all dependencies:"
+    print -P "   %F{green}npm run install:all%f"
+    echo ""
+    print -P "%F{yellow}3.%f Set up environment variables for $ENVIRONMENT:"
+    print -P "   %F{green}cp backend/.env.$ENVIRONMENT backend/.env%f"
+    if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
+        print -P "   %F{green}cp frontend/.env.$ENVIRONMENT frontend/.env%f"
+    fi
+    echo ""
+    print -P "%F{yellow}4.%f Set up database:"
+    print -P "   %F{green}cd backend && ./scripts/migrate.sh%f"
+    echo ""
+    print -P "%F{yellow}5.%f Start the $ENVIRONMENT environment:"
+    print -P "   %F{green}./scripts/start-$ENVIRONMENT.sh local%f"
+    print -P "   %F{green}   or%f"
+    print -P "   %F{green}./scripts/start-$ENVIRONMENT.sh docker%f"
+    echo ""
+    print -P "%F{yellow}6.%f Configure CI/CD (optional):"
+    print -P "   %F{green}📚 Review .github/workflows/ for GitHub Actions%f"
+    print -P "   %F{green}🔐 Set up repository secrets for deployment%f"
+    echo ""
+    print -P "%F{blue}🎯 Project Features:%f"
+    print -P "%F{yellow}•%f Professional project structure"
+    print -P "%F{yellow}•%f Pre-configured dev tools (ESLint, Prettier, Husky)"
+    print -P "%F{yellow}•%f Docker and CI/CD configurations"
+    print -P "%F{yellow}•%f Environment-specific settings"
+    print -P "%F{yellow}•%f Database setup and migrations"
+    print -P "%F{yellow}•%f Testing framework"
+    print -P "%F{yellow}•%f Development scripts"
+    echo ""
+    print -P "%F{blue}🌍 Environment:%f $ENVIRONMENT configuration applied"
+    print -P "%F{blue}🚀 Quick start:%f ./scripts/start-$ENVIRONMENT.sh local"
+    print -P "%F{blue}🔧 CI/CD:%f GitHub Actions workflows configured"
+    echo ""
+    print -P "%F{cyan}Happy coding! 🎉%f"
+}
+
+# Function to create database migrations and seeds
+create_database_files() {
+    log_info "Creating database migrations and seeds..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create database files"
+        return
+    fi
+    
+    # Create migration directory structure
+    mkdir -p backend/migrations
+    mkdir -p backend/seeds
+    mkdir -p backend/scripts
+    
+    # Initial migration file
+    cat > backend/migrations/001_initial_schema.sql << 'EOF'
+-- Initial database schema for '$PROJECT_NAME'
 -- Created: $(date)
 
 -- Enable UUID extension
@@ -1932,12 +1237,12 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Update timestamp trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS \$\$
+RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-\$\$ language 'plpgsql';
+$$ language 'plpgsql';
 
 -- Add trigger to users table
 CREATE TRIGGER update_users_updated_at 
@@ -1946,21 +1251,21 @@ CREATE TRIGGER update_users_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 EOF
 
-# Seed data for development
-cat > backend/seeds/001_development_data.sql << EOF
--- Development seed data for $PROJECT_NAME
+    # Seed data for development
+    cat > backend/seeds/001_development_data.sql << 'EOF'
+-- Development seed data for '$PROJECT_NAME'
 -- This file is only used in development environment
 
 -- Insert sample users
 INSERT INTO users (email, password_hash, first_name, last_name) VALUES
-('admin@example.com', '\$2b\$10\$example.hash.here', 'Admin', 'User'),
-('user@example.com', '\$2b\$10\$example.hash.here', 'Test', 'User')
+('admin@example.com', '$2b$10$example.hash.here', 'Admin', 'User'),
+('user@example.com', '$2b$10$example.hash.here', 'Test', 'User')
 ON CONFLICT (email) DO NOTHING;
 EOF
 
-# Migration runner script
-cat > backend/scripts/migrate.sh << 'EOF'
-#!/bin/bash
+    # Migration runner script
+    cat > backend/scripts/migrate.sh << 'EOF'
+#!/bin/zsh
 
 # Database migration script
 set -e
@@ -1968,7 +1273,7 @@ set -e
 ENVIRONMENT=${NODE_ENV:-development}
 DB_HOST=${DB_HOST:-localhost}
 DB_PORT=${DB_PORT:-5432}
-DB_NAME=${DB_NAME:-my_project_dev}
+DB_NAME=${DB_NAME:-'$PROJECT_NAME'_dev}
 DB_USER=${DB_USER:-postgres}
 
 echo "Running migrations for environment: $ENVIRONMENT"
@@ -1976,17 +1281,17 @@ echo "Database: $DB_NAME on $DB_HOST:$DB_PORT"
 
 # Run migrations
 for file in migrations/*.sql; do
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
         echo "Running migration: $file"
         PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$file"
     fi
 done
 
 # Run seeds only in development
-if [ "$ENVIRONMENT" = "development" ]; then
+if [[ "$ENVIRONMENT" == "development" ]]; then
     echo "Running seed data for development..."
     for file in seeds/*.sql; do
-        if [ -f "$file" ]; then
+        if [[ -f "$file" ]]; then
             echo "Running seed: $file"
             PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$file"
         fi
@@ -1996,16 +1301,24 @@ fi
 echo "Migrations completed successfully!"
 EOF
 
-chmod +x backend/scripts/migrate.sh
+    chmod +x backend/scripts/migrate.sh
+    
+    log_success "Database migrations and seeds created successfully!"
+}
 
-# Create starter application files
-echo -e "${BLUE}📝 Creating starter application files...${NC}"
-
-# Backend starter files
-case $BACKEND_FRAMEWORK in
-    "node")
-        # Main server file
-        cat > backend/src/index.js << EOF
+# Function to create backend starter files
+create_backend_files() {
+    log_info "Creating backend starter files..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create backend files"
+        return
+    fi
+    
+    case $BACKEND_FRAMEWORK in
+        "node")
+            # Main server file
+            cat > backend/src/index.js << 'EOF'
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -2052,16 +1365,16 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(\`🚀 Server running on port \${PORT}\`);
-  console.log(\`🌍 Environment: \${process.env.NODE_ENV || 'development'}\`);
-  console.log(\`📊 Health check: http://localhost:\${PORT}/health\`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
 });
 
 module.exports = app;
 EOF
 
-        # Routes index
-        cat > backend/src/routes/index.js << EOF
+            # Routes index
+            cat > backend/src/routes/index.js << 'EOF'
 const express = require('express');
 const router = express.Router();
 
@@ -2076,7 +1389,7 @@ router.use('/users', userRoutes);
 // API info endpoint
 router.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to $PROJECT_NAME API',
+    message: 'Welcome to '$PROJECT_NAME' API',
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     endpoints: {
@@ -2090,111 +1403,71 @@ router.get('/', (req, res) => {
 module.exports = router;
 EOF
 
-        # Auth routes
-        cat > backend/src/routes/auth.js << EOF
+            # Auth routes
+            cat > backend/src/routes/auth.js << 'EOF'
 const express = require('express');
 const router = express.Router();
 
 // Login endpoint
 router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  
-  // TODO: Implement actual authentication
-  if (email === 'admin@example.com' && password === 'password') {
-    res.json({
-      success: true,
-      message: 'Login successful',
-      user: { email, role: 'admin' }
-    });
-  } else {
-    res.status(401).json({
-      success: false,
-      message: 'Invalid credentials'
-    });
-  }
+  // TODO: Implement login logic
+  res.json({ message: 'Login endpoint - implement authentication logic' });
 });
 
 // Register endpoint
 router.post('/register', (req, res) => {
-  const { email, password, firstName, lastName } = req.body;
-  
-  // TODO: Implement actual user registration
-  res.json({
-    success: true,
-    message: 'User registered successfully',
-    user: { email, firstName, lastName }
-  });
+  // TODO: Implement registration logic
+  res.json({ message: 'Register endpoint - implement user creation logic' });
 });
 
 // Logout endpoint
 router.post('/logout', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Logout successful'
-  });
+  // TODO: Implement logout logic
+  res.json({ message: 'Logout endpoint - implement session cleanup' });
 });
 
 module.exports = router;
 EOF
 
-        # User routes
-        cat > backend/src/routes/users.js << EOF
+            # User routes
+            cat > backend/src/routes/users.js << 'EOF'
 const express = require('express');
 const router = express.Router();
 
 // Get all users
 router.get('/', (req, res) => {
-  // TODO: Implement actual user fetching from database
-  const users = [
-    { id: 1, email: 'admin@example.com', firstName: 'Admin', lastName: 'User' },
-    { id: 2, email: 'user@example.com', firstName: 'Test', lastName: 'User' }
-  ];
-  
-  res.json({
-    success: true,
-    users
-  });
+  // TODO: Implement user listing logic
+  res.json({ message: 'Get users endpoint - implement user listing logic' });
 });
 
 // Get user by ID
 router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  
-  // TODO: Implement actual user fetching from database
-  const user = { id, email: 'user@example.com', firstName: 'Test', lastName: 'User' };
-  
-  res.json({
-    success: true,
-    user
-  });
+  // TODO: Implement user retrieval logic
+  res.json({ message: `Get user ${req.params.id} - implement user retrieval logic` });
 });
 
 // Update user
 router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const { firstName, lastName, email } = req.body;
-  
-  // TODO: Implement actual user updating
-  res.json({
-    success: true,
-    message: 'User updated successfully',
-    user: { id, firstName, lastName, email }
-  });
+  // TODO: Implement user update logic
+  res.json({ message: `Update user ${req.params.id} - implement user update logic` });
+});
+
+// Delete user
+router.delete('/:id', (req, res) => {
+  // TODO: Implement user deletion logic
+  res.json({ message: `Delete user ${req.params.id} - implement user deletion logic` });
 });
 
 module.exports = router;
 EOF
 
-        # Database connection
-        cat > backend/src/config/database.js << EOF
+            # Database configuration
+            cat > backend/src/config/database.js << 'EOF'
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || '${PROJECT_NAME//-/_}_dev',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
@@ -2212,12 +1485,12 @@ pool.on('error', (err) => {
 module.exports = pool;
 EOF
 
-        # Update backend package.json with additional dependencies
-        cat > backend/package.json << EOF
+            # Backend package.json
+            cat > backend/package.json << 'EOF'
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "$PROJECT_NAME Backend API",
+  "description": "'$PROJECT_NAME' Backend API",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -2248,15 +1521,29 @@ EOF
   "license": "MIT"
 }
 EOF
-        ;;
-esac
+            ;;
+    esac
+    
+    log_success "Backend starter files created successfully!"
+}
 
-# Frontend starter files (if frontend exists)
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
+# Function to create frontend starter files
+create_frontend_files() {
+    if [[ -z "$FRONTEND_FRAMEWORK" ]]; then
+        return
+    fi
+    
+    log_info "Creating frontend starter files..."
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_verbose "Would create frontend files"
+        return
+    fi
+    
     case $FRONTEND_FRAMEWORK in
         "react")
             # Main React entry point
-            cat > frontend/src/main.jsx << EOF
+            cat > frontend/src/main.jsx << 'EOF'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
@@ -2270,7 +1557,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 EOF
 
             # Main App component
-            cat > frontend/src/App.jsx << EOF
+            cat > frontend/src/App.jsx << 'EOF'
 import React, { useState, useEffect } from 'react'
 import './App.css'
 
@@ -2295,7 +1582,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Welcome to $PROJECT_NAME</h1>
+        <h1>Welcome to '$PROJECT_NAME'</h1>
         <p>A modern web application built with React</p>
         
         {loading ? (
@@ -2319,7 +1606,7 @@ function App() {
             <li>React 18 with Vite</li>
             <li>Hot module replacement</li>
             <li>API integration</li>
-            <li>Environment: $ENVIRONMENT</li>
+            <li>Environment: '$ENVIRONMENT'</li>
           </ul>
         </div>
       </header>
@@ -2331,7 +1618,7 @@ export default App
 EOF
 
             # CSS files
-            cat > frontend/src/App.css << EOF
+            cat > frontend/src/App.css << 'EOF'
 .App {
   text-align: center;
   min-height: 100vh;
@@ -2400,7 +1687,7 @@ EOF
 }
 EOF
 
-            cat > frontend/src/index.css << EOF
+            cat > frontend/src/index.css << 'EOF'
 * {
   margin: 0;
   padding: 0;
@@ -2422,7 +1709,7 @@ code {
 EOF
 
             # Vite config
-            cat > frontend/vite.config.js << EOF
+            cat > frontend/vite.config.js << 'EOF'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -2441,14 +1728,14 @@ export default defineConfig({
 EOF
 
             # HTML template
-            cat > frontend/index.html << EOF
+            cat > frontend/index.html << 'EOF'
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>$PROJECT_NAME</title>
+    <title>'$PROJECT_NAME'</title>
   </head>
   <body>
     <div id="root"></div>
@@ -2456,46 +1743,157 @@ EOF
   </body>
 </html>
 EOF
+
+            # Frontend package.json
+            cat > frontend/package.json << 'EOF'
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "vite": "^5.0.8"
+  }
+}
+EOF
             ;;
     esac
-fi
+    
+    log_success "Frontend starter files created successfully!"
+}
 
-echo -e "${GREEN}✅ Project structure created successfully!${NC}"
-echo ""
-echo -e "${BLUE}📋 Next Steps:${NC}"
-echo -e "${YELLOW}1.${NC} Navigate to the project directory:"
-echo -e "   ${GREEN}cd $PROJECT_NAME${NC}"
-echo ""
-echo -e "${YELLOW}2.${NC} Install all dependencies:"
-echo -e "   ${GREEN}npm run install:all${NC}"
-echo ""
-echo -e "${YELLOW}3.${NC} Set up environment variables for $ENVIRONMENT:"
-echo -e "   ${GREEN}cp backend/.env.${ENVIRONMENT} backend/.env${NC}"
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    echo -e "   ${GREEN}cp frontend/.env.${ENVIRONMENT} frontend/.env${NC}"
-fi
-echo ""
-echo -e "${YELLOW}4.${NC} Set up database:"
-echo -e "   ${GREEN}cd backend && ./scripts/migrate.sh${NC}"
-echo ""
-echo -e "${YELLOW}5.${NC} Start the $ENVIRONMENT environment:"
-echo -e "   ${GREEN}./scripts/start-${ENVIRONMENT}.sh local${NC}"
-echo -e "   ${GREEN}   or${NC}"
-echo -e "   ${GREEN}./scripts/start-${ENVIRONMENT}.sh docker${NC}"
-echo ""
-echo -e "${YELLOW}6.${NC} Configure CI/CD (optional):"
-echo -e "   ${GREEN}📚 Review .github/workflows/ for GitHub Actions${NC}"
-echo -e "   ${GREEN}🔐 Set up repository secrets for deployment${NC}"
-echo -e "   ${GREEN}📖 Check docs/ci-cd/README.md for setup guide${NC}"
-echo ""
-echo -e "${YELLOW}7.${NC} (Optional) Generate documentation templates:"
-echo -e "   ${GREEN}./create_docs.sh -p $PROJECT_NAME -e $ENVIRONMENT -f $FRONTEND_FRAMEWORK -b $BACKEND_FRAMEWORK -d $DATABASE${NC}"
-echo ""
-echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for $ENVIRONMENT!${NC}"
-echo ""
-echo -e "${YELLOW}📚 Check the docs/ directory for detailed guides (if you generated documentation).${NC}"
-echo -e "${YELLOW}🌍 Environment: $ENVIRONMENT configuration applied.${NC}"
-echo -e "${YELLOW}🚀 Quick start: ./scripts/start-${ENVIRONMENT}.sh local${NC}"
-echo -e "${YELLOW}🔧 CI/CD: GitHub Actions workflows configured for $ENVIRONMENT${NC}"
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --name|-n)
+            PROJECT_NAME="$2"
+            shift 2
+            ;;
+        --description|-d)
+            PROJECT_DESCRIPTION="$2"
+            shift 2
+            ;;
+        --frontend|-f)
+            FRONTEND_FRAMEWORK="$2"
+            validate_choice "$FRONTEND_FRAMEWORK" "react vue angular nextjs" "frontend framework"
+            shift 2
+            ;;
+        --backend|-b)
+            BACKEND_FRAMEWORK="$2"
+            validate_choice "$BACKEND_FRAMEWORK" "node python dotnet java" "backend framework"
+            shift 2
+            ;;
+        --database|-db)
+            DATABASE="$2"
+            validate_choice "$DATABASE" "postgresql mysql mongodb sqlite" "database"
+            shift 2
+            ;;
+        --deployment|-dep)
+            DEPLOYMENT="$2"
+            validate_choice "$DEPLOYMENT" "docker kubernetes serverless" "deployment"
+            shift 2
+            ;;
+        --template|-t)
+            PROJECT_TEMPLATE="$2"
+            validate_choice "$PROJECT_TEMPLATE" "saas ecommerce api dashboard mobile" "project template"
+            apply_template "$PROJECT_TEMPLATE"
+            shift 2
+            ;;
+        --environment|-e)
+            ENVIRONMENT="$2"
+            validate_choice "$ENVIRONMENT" "development staging production" "environment"
+            shift 2
+            ;;
+        --interactive|-i)
+            INTERACTIVE_MODE=true
+            shift
+            ;;
+        --dry-run|-dr)
+            DRY_RUN=true
+            shift
+            ;;
+        --verbose|-v)
+            VERBOSE=true
+            shift
+            ;;
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
-exit 0
+# Main execution
+main() {
+    # Show header
+    print -P "%F{blue}🚀 Enhanced Project Initialization Script v${VERSION}%f"
+    print -P "%F{blue}================================================%f"
+    echo ""
+    
+    # Run interactive setup if requested
+    if [[ "$INTERACTIVE_MODE" == true ]]; then
+        interactive_setup
+    fi
+    
+    # Show configuration summary
+    show_configuration
+    
+    # Check if project directory already exists
+    if [[ -d "$PROJECT_NAME" ]] && [[ "$DRY_RUN" == false ]]; then
+        log_error "Project directory '$PROJECT_NAME' already exists!"
+        log_info "Please remove it or choose a different name."
+        exit 1
+    fi
+    
+    # Create project structure
+    create_directory_structure
+    
+    # Create configuration files
+    create_configuration_files
+    
+    # Create environment-specific files
+    create_environment_files
+    
+    # Create database migrations and seeds
+    create_database_files
+    
+    # Create backend starter files
+    create_backend_files
+    
+    # Create frontend starter files
+    create_frontend_files
+    
+    # Create development scripts
+    create_development_scripts
+    
+    # Create CI/CD workflows
+    create_cicd_workflows
+    
+    # Show final summary
+    create_final_summary
+}
+
+# Run main function
+main "$@" 
