@@ -35,9 +35,11 @@
 
 - [ ] **CI/CD Pipeline**
   - [ ] All GitHub Actions checks pass
-  - [ ] Code coverage requirements met
+  - [ ] Code coverage requirements met (80% minimum)
   - [ ] Security scanning completed
   - [ ] Build successful
+  - [ ] Coverage thresholds enforced
+  - [ ] Required status checks pass
 
 ## 🎯 Description
 

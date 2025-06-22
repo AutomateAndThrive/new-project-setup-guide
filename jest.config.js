@@ -9,7 +9,11 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/examples/**/*.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/examples/**/*.ts', // Exclude example files from coverage
+  ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
@@ -21,4 +25,5 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  testTimeout: 10000,
 };

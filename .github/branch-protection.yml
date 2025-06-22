@@ -11,6 +11,8 @@ branches:
           - 'Quality Checks'
           - 'Testing & Coverage'
           - 'Security Scanning'
+          - 'Build & Package'
+          - 'Docker Build'
       enforce_admins: true
       required_pull_request_reviews:
         required_approving_review_count: 1

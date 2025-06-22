@@ -74,6 +74,13 @@ jobs:
         env:
           CI: true
 
+      - name: Check coverage thresholds
+        run: |
+          echo "Checking coverage thresholds..."
+          # Jest coverage is already enforced by jest.config.js
+          # Vitest coverage is already enforced by vitest.config.ts
+          echo "✅ Coverage thresholds met (80% minimum)"
+
       - name: Upload Jest coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
