@@ -1119,6 +1119,576 @@ EOF
         ;;
 esac
 
+# Create CI/CD templates
+echo -e "${BLUE}🔧 Setting up CI/CD workflows...${NC}"
+
+# Create GitHub Actions directory
+mkdir -p .github/workflows
+
+# Base workflow for all environments
+cat > .github/workflows/ci.yml << EOF
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, staging ]
+  pull_request:
+    branches: [ main, develop, staging ]
+
+env:
+  NODE_VERSION: '18'
+  POSTGRES_VERSION: '15'
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:\${{ env.POSTGRES_VERSION }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: \${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        if [ -d "backend" ]; then
+          cd backend && npm ci
+        fi
+        if [ -d "frontend" ]; then
+          cd frontend && npm ci
+        fi
+
+    - name: Run linting
+      run: |
+        npm run lint
+        if [ -d "backend" ]; then
+          cd backend && npm run lint
+        fi
+        if [ -d "frontend" ]; then
+          cd frontend && npm run lint
+        fi
+
+    - name: Run tests
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: test_db
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+      run: |
+        npm run test
+        if [ -d "backend" ]; then
+          cd backend && npm run test
+        fi
+        if [ -d "frontend" ]; then
+          cd frontend && npm run test
+        fi
+
+    - name: Build application
+      run: |
+        if [ -d "backend" ]; then
+          cd backend && npm run build
+        fi
+        if [ -d "frontend" ]; then
+          cd frontend && npm run build
+        fi
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: \${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run security audit
+      run: npm audit --audit-level moderate
+
+    - name: Run SAST scan
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+EOF
+
+# Environment-specific deployment workflows
+case $ENVIRONMENT in
+    "development")
+        cat > .github/workflows/deploy-development.yml << EOF
+name: Deploy to Development
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, security-scan]
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: \${{ secrets.CONTAINER_REGISTRY }}
+        username: \${{ secrets.REGISTRY_USERNAME }}
+        password: \${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:dev-\${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
+echo "    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:dev-\${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max"
+fi)
+
+    - name: Deploy to development environment
+      run: |
+        echo "Deploying to development environment..."
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/development/
+        # or: docker-compose -f docker-compose.yml up -d
+EOF
+        ;;
+
+    "staging")
+        cat > .github/workflows/deploy-staging.yml << EOF
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ staging ]
+  pull_request:
+    branches: [ staging ]
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, security-scan]
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: \${{ secrets.CONTAINER_REGISTRY }}
+        username: \${{ secrets.REGISTRY_USERNAME }}
+        password: \${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:staging-\${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
+echo "    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:staging-\${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max"
+fi)
+
+    - name: Deploy to staging environment
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/staging/
+        # or: docker-compose -f docker-compose.staging.yml up -d
+
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests against staging..."
+        # Add integration test commands here
+        # Example: npm run test:integration -- --baseUrl=https://staging.example.com
+EOF
+        ;;
+
+    "production")
+        cat > .github/workflows/deploy-production.yml << EOF
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, security-scan]
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: \${{ secrets.CONTAINER_REGISTRY }}
+        username: \${{ secrets.REGISTRY_USERNAME }}
+        password: \${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:latest
+          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-backend:prod-\${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
+echo "    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:latest
+          \${{ secrets.CONTAINER_REGISTRY }}/\${{ github.repository }}-frontend:prod-\${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max"
+fi)
+
+    - name: Deploy to production environment
+      run: |
+        echo "Deploying to production environment..."
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/production/
+        # or: docker-compose -f docker-compose.production.yml up -d
+
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests against production..."
+        # Add smoke test commands here
+        # Example: npm run test:smoke -- --baseUrl=https://example.com
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "Production deployment successful!"
+        # Add notification commands here (Slack, email, etc.)
+EOF
+        ;;
+esac
+
+# Create release workflow
+cat > .github/workflows/release.yml << EOF
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: \${{ github.ref }}
+        release_name: Release \${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Generate changelog
+      run: |
+        echo "Generating changelog..."
+        # Add changelog generation commands here
+        # Example: npx conventional-changelog-cli -p angular -i CHANGELOG.md -s
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: \${{ steps.create-release.outputs.upload_url }}
+        asset_path: ./dist/app.zip
+        asset_name: app-\${{ github.ref_name }}.zip
+        asset_content_type: application/zip
+EOF
+
+# Create dependency update workflow
+cat > .github/workflows/dependency-update.yml << EOF
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Every Monday at 2 AM
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Check for outdated dependencies
+      run: |
+        npm outdated || true
+        if [ -d "backend" ]; then
+          cd backend && npm outdated || true
+        fi
+        if [ -d "frontend" ]; then
+          cd frontend && npm outdated || true
+        fi
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: \${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: 'chore: update dependencies'
+        body: |
+          Automated dependency updates
+          
+          This PR updates outdated dependencies to their latest versions.
+          
+          Please review the changes and test thoroughly before merging.
+        branch: dependency-updates
+        delete-branch: true
+EOF
+
+# Create environment-specific secrets documentation
+mkdir -p docs/ci-cd
+cat > docs/ci-cd/README.md << EOF
+# CI/CD Configuration
+
+This project uses GitHub Actions for continuous integration and deployment.
+
+## Workflows
+
+### CI Pipeline (\`ci.yml\`)
+- Runs on all pushes and pull requests
+- Lints code and runs tests
+- Performs security scans
+- Builds the application
+
+### Deployment Workflows
+- **Development**: \`deploy-development.yml\` - Deploys to development environment
+- **Staging**: \`deploy-staging.yml\` - Deploys to staging environment  
+- **Production**: \`deploy-production.yml\` - Deploys to production environment
+
+### Release Management
+- **Release**: \`release.yml\` - Creates releases on tag push
+- **Dependencies**: \`dependency-update.yml\` - Automated dependency updates
+
+## Required Secrets
+
+Configure these secrets in your GitHub repository settings:
+
+### Container Registry
+- \`CONTAINER_REGISTRY\` - Your container registry URL (e.g., ghcr.io)
+- \`REGISTRY_USERNAME\` - Registry username
+- \`REGISTRY_PASSWORD\` - Registry password/token
+
+### Environment-Specific Secrets
+- \`DEV_DEPLOY_KEY\` - SSH key for development deployment
+- \`STAGING_DEPLOY_KEY\` - SSH key for staging deployment
+- \`PROD_DEPLOY_KEY\` - SSH key for production deployment
+
+### Optional Secrets
+- \`SLACK_WEBHOOK_URL\` - For deployment notifications
+- \`EMAIL_NOTIFICATION\` - For email notifications
+
+## Environment Configuration
+
+### Development
+- Automatic deployment on push to \`develop\` branch
+- No approval required
+- Quick feedback loop
+
+### Staging
+- Automatic deployment on push to \`staging\` branch
+- Integration tests run after deployment
+- Manual approval may be required
+
+### Production
+- Deployment on push to \`main\` branch
+- Manual approval required
+- Smoke tests run after deployment
+- Release notes generated
+
+## Local Development
+
+To test workflows locally:
+
+\`\`\`bash
+# Install act (GitHub Actions local runner)
+brew install act
+
+# Run specific workflow
+act push -W .github/workflows/ci.yml
+
+# Run with secrets
+act push --secret-file .secrets
+\`\`\`
+
+## Customization
+
+1. **Modify deployment steps** in the workflow files
+2. **Add environment-specific variables** in GitHub repository settings
+3. **Configure approval gates** in environment settings
+4. **Add custom notifications** in the workflow steps
+
+## Troubleshooting
+
+- Check workflow logs in GitHub Actions tab
+- Verify secrets are properly configured
+- Ensure environment protection rules are set up
+- Test workflows locally with \`act\`
+EOF
+
+# Create GitHub Actions configuration file
+cat > .github/actions.yml << EOF
+# GitHub Actions configuration
+# This file can be used to configure repository-wide settings
+
+# Enable required status checks for protected branches
+required_status_checks:
+  strict: true
+  contexts:
+    - lint-and-test
+    - security-scan
+
+# Required pull request reviews
+required_pull_request_reviews:
+  required_approving_review_count: 2
+  dismiss_stale_reviews: true
+  require_code_owner_reviews: true
+
+# Branch protection rules
+branch_protection_rules:
+  - pattern: main
+    required_status_checks:
+      strict: true
+      contexts:
+        - lint-and-test
+        - security-scan
+    required_pull_request_reviews:
+      required_approving_review_count: 2
+    enforce_admins: true
+    allow_force_pushes: false
+    allow_deletions: false
+
+  - pattern: staging
+    required_status_checks:
+      strict: true
+      contexts:
+        - lint-and-test
+        - security-scan
+    required_pull_request_reviews:
+      required_approving_review_count: 1
+    allow_force_pushes: false
+    allow_deletions: false
+EOF
+
 # Create README - adjust based on project type and environment
 if [ -n "$FRONTEND_FRAMEWORK" ]; then
     cat > README.md << EOF
@@ -1929,10 +2499,16 @@ echo -e "   ${GREEN}./scripts/start-${ENVIRONMENT}.sh local${NC}"
 echo -e "   ${GREEN}   or${NC}"
 echo -e "   ${GREEN}./scripts/start-${ENVIRONMENT}.sh docker${NC}"
 echo ""
+echo -e "${YELLOW}6.${NC} Configure CI/CD (optional):"
+echo -e "   ${GREEN}📚 Review .github/workflows/ for GitHub Actions${NC}"
+echo -e "   ${GREEN}🔐 Set up repository secrets for deployment${NC}"
+echo -e "   ${GREEN}📖 Check docs/ci-cd/README.md for setup guide${NC}"
+echo ""
 echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for $ENVIRONMENT!${NC}"
 echo ""
 echo -e "${YELLOW}📚 Check the docs/ directory for detailed guides.${NC}"
 echo -e "${YELLOW}🌍 Environment: $ENVIRONMENT configuration applied.${NC}"
 echo -e "${YELLOW}🚀 Quick start: ./scripts/start-${ENVIRONMENT}.sh local${NC}"
+echo -e "${YELLOW}🔧 CI/CD: GitHub Actions workflows configured for $ENVIRONMENT${NC}"
 
 exit 0
