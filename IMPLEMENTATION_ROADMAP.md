@@ -82,21 +82,21 @@ This document tracks the implementation of our MVP setup for solo developers and
 
 - [x] Update **README** as documentation hub
 - [x] Create **CI/CD Guide** (`docs/development/CI_CD_Guide.md`)
-- [ ] Add **troubleshooting section** to branching strategy
-- [ ] Create **quick reference guides** for common tasks
+- [x] Add **troubleshooting section** to branching strategy
+- [x] Create **quick reference guides** for common tasks
 
 #### **3.2 Developer Experience**
 
-- [ ] Add **"Where Does My Code Go?"** section to onboarding guide
-- [ ] Create **commit message quick reference**
-- [ ] Add **PR template** with checklist
-- [ ] Create **onboarding checklist** for new developers
+- [x] Add **"Where Does My Code Go?"** section to onboarding guide
+- [x] Create **commit message quick reference**
+- [x] Add **PR template** with checklist
+- [x] Create **onboarding checklist** for new developers
 
 #### **3.3 Knowledge Management**
 
-- [ ] Add **Architecture Decision Records (ADR)** template
-- [ ] Create **decision log** structure
-- [ ] Add **code documentation standards**
+- [x] Add **Architecture Decision Records (ADR) template** (`docs/development/ADR_Template.md`)
+- [x] Create **decision log structure**
+- [x] Add **code documentation standards**
 - [ ] Set up **automated API documentation**
 
 ### **Phase 4: Project Templates & Scripts**
