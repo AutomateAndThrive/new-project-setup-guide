@@ -12,44 +12,441 @@
 #   create issues in the project's issue tracker.
 # ==============================================================================
 
-# Phase 1: Documentation & Repository Foundation
-- title: "Docs: Create contributing.md guide"
-  body: "Create the primary `contributing.md` file at the project root. It should detail all development workflows, coding standards, and quality check procedures."
-  labels: [documentation, enhancement]
-- title: "Docs: Create backend/README.md"
-  body: "Create a dedicated README in `/backend` with setup, configuration, and script-running instructions specific to the FastAPI application."
-  labels: [documentation, enhancement]
-- title: "Docs: Create frontend/README.md"
-  body: "Create a dedicated README in `/frontend` with setup, configuration, and script-running instructions specific to the React application."
-  labels: [documentation, enhancement]
-- title: "Docs: Refine root README.md for high-level overview"
-  body: "Update the root README to be a high-level project summary, removing specific setup commands and linking to the new `backend` and `frontend` READMEs."
-  labels: [documentation, refactor]
-- title: "Docs: Create a detailed docs/README.md as a Table of Contents"
-  body: "Create a `docs/README.md` to serve as a clear index for the documentation suite, ensuring all links are current and descriptions are accurate."
-  labels: [documentation, enhancement]
-- title: "Docs: Synchronize project versioning across all documents"
-  body: "Establish `0.1.0-alpha` as the authoritative version and update all references in `api.md`, `README.md`, and other documents to ensure consistency."
-  labels: [documentation, bug]
-- title: "Docs: Create CHANGELOG.md at the project root"
-  body: "Create a `CHANGELOG.md` file at the project root, formatted according to 'Keep a Changelog' standards, to track changes between versions."
-  labels: [documentation, enhancement]
+# Pixel to Profit - Master Task List
+# Comprehensive development roadmap for the AI-powered print-on-demand listing automation tool
 
-# Phase 2: Backend Application Boilerplate
-- title: "chore(backend): Initialize FastAPI application"
-  body: "Populate the `backend/app/main.py` file with a basic FastAPI app instance and a health check endpoint. Fill out the other placeholder files created by the init script."
-  labels: [backend, chore]
-- title: "chore(backend): Establish initial dependencies"
-  body: "Populate the `backend/requirements.txt` file with core dependencies: `fastapi`, `uvicorn[standard]`, `sqlalchemy`, and `psycopg2-binary`."
-  labels: [backend, chore]
-- title: "chore(backend): Configure pre-commit hooks"
-  body: "Create a `backend/.pre-commit-config.yaml` file to set up automated quality checks with `black`, `isort`, and `flake8` to run on every commit."
-  labels: [backend, chore]
+project:
+  name: "Pixel to Profit"
+  description: "AI-powered print-on-demand listing automation tool"
+  version: "1.0.0"
+  status: "MVP Development"
 
-# Phase 3: Frontend Application Boilerplate
-- title: "chore(frontend): Initialize React application with Vite"
-  body: "Run the command `npm create vite@latest . -- --template react` inside the `/frontend` directory to bootstrap the initial React application."
-  labels: [frontend, chore]
-- title: "chore(frontend): Integrate TailwindCSS"
-  body: "Follow the official TailwindCSS documentation to install and configure it for the Vite project, including creating the necessary `tailwind.config.js` and `postcss.config.js` files."
-  labels: [frontend, chore]
+phases:
+  - name: "Project Setup & Infrastructure"
+    status: "in-progress"
+    priority: "critical"
+    tasks:
+      - id: "SETUP-001"
+        title: "Initialize project structure"
+        description: "Set up the complete project directory structure with frontend, backend, and documentation"
+        status: "completed"
+        assignee: "developer"
+        estimated_hours: 2
+        dependencies: []
+        
+      - id: "SETUP-002"
+        title: "Configure development environment"
+        description: "Set up Docker, database, and development tools"
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 4
+        dependencies: ["SETUP-001"]
+        
+      - id: "SETUP-003"
+        title: "Set up API keys and environment variables"
+        description: "Configure Google Gemini API and Printify API keys"
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 1
+        dependencies: ["SETUP-002"]
+        
+      - id: "SETUP-004"
+        title: "Initialize Git repository and branching strategy"
+        description: "Set up Git with proper branching strategy and initial commits"
+        status: "pending"
+        assignee: "developer"
+        estimated_hours: 1
+        dependencies: ["SETUP-001"]
+
+  - name: "Backend API Development"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "BACKEND-001"
+        title: "Set up Express.js server with middleware"
+        description: "Create Express server with CORS, helmet, rate limiting, and error handling"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 6
+        dependencies: ["SETUP-002"]
+        
+      - id: "BACKEND-002"
+        title: "Configure PostgreSQL database with Sequelize"
+        description: "Set up database models for designs, products, and user data"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 8
+        dependencies: ["BACKEND-001"]
+        
+      - id: "BACKEND-003"
+        title: "Implement Redis caching layer"
+        description: "Set up Redis for caching Printify product data and API responses"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 4
+        dependencies: ["BACKEND-002"]
+        
+      - id: "BACKEND-004"
+        title: "Create file upload system with Multer"
+        description: "Implement secure file upload for design images with validation"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 6
+        dependencies: ["BACKEND-001"]
+        
+      - id: "BACKEND-005"
+        title: "Integrate Google Gemini API for image analysis"
+        description: "Implement AI service for analyzing uploaded designs and generating content"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 12
+        dependencies: ["BACKEND-004", "SETUP-003"]
+        
+      - id: "BACKEND-006"
+        title: "Integrate Printify API for product data"
+        description: "Create service to fetch product catalog and color information"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 10
+        dependencies: ["BACKEND-003", "SETUP-003"]
+        
+      - id: "BACKEND-007"
+        title: "Implement image processing with Sharp"
+        description: "Create service to overlay designs on color backgrounds for preview"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 8
+        dependencies: ["BACKEND-004"]
+        
+      - id: "BACKEND-008"
+        title: "Create content generation API endpoints"
+        description: "Implement endpoints for generating titles, tags, and descriptions"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 8
+        dependencies: ["BACKEND-005"]
+        
+      - id: "BACKEND-009"
+        title: "Implement export functionality"
+        description: "Create endpoints for exporting listing content and selected colors"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 4
+        dependencies: ["BACKEND-008"]
+
+  - name: "Frontend Development"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "FRONTEND-001"
+        title: "Set up React application with Vite and TypeScript"
+        description: "Initialize React app with proper TypeScript configuration and routing"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 4
+        dependencies: ["SETUP-002"]
+        
+      - id: "FRONTEND-002"
+        title: "Configure Tailwind CSS and UI components"
+        description: "Set up styling system with Tailwind and create base UI components"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 6
+        dependencies: ["FRONTEND-001"]
+        
+      - id: "FRONTEND-003"
+        title: "Create product selection interface"
+        description: "Build dropdown/selector for choosing Printify products"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 8
+        dependencies: ["FRONTEND-002", "BACKEND-006"]
+        
+      - id: "FRONTEND-004"
+        title: "Implement design upload component"
+        description: "Create drag-and-drop file upload with preview and validation"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 10
+        dependencies: ["FRONTEND-002", "BACKEND-004"]
+        
+      - id: "FRONTEND-005"
+        title: "Build keyword input interface"
+        description: "Create optional keyword input field for AI content refinement"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 4
+        dependencies: ["FRONTEND-004"]
+        
+      - id: "FRONTEND-006"
+        title: "Create unified dashboard interface"
+        description: "Build main dashboard for reviewing and editing generated content"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 12
+        dependencies: ["FRONTEND-003", "FRONTEND-005", "BACKEND-008"]
+        
+      - id: "FRONTEND-007"
+        title: "Implement color visualizer and selector"
+        description: "Create grid view of design on all available product colors with selection"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 16
+        dependencies: ["FRONTEND-006", "BACKEND-007"]
+        
+      - id: "FRONTEND-008"
+        title: "Add content editing capabilities"
+        description: "Implement inline editing for title, tags, and description with copy functionality"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 8
+        dependencies: ["FRONTEND-006"]
+        
+      - id: "FRONTEND-009"
+        title: "Create export interface"
+        description: "Build export page with copy buttons for all content fields"
+        status: "pending"
+        assignee: "frontend-developer"
+        estimated_hours: 6
+        dependencies: ["FRONTEND-008", "BACKEND-009"]
+
+  - name: "AI Integration & Content Generation"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "AI-001"
+        title: "Implement design analysis with Gemini"
+        description: "Create AI service to analyze uploaded designs for content and style"
+        status: "pending"
+        assignee: "ai-developer"
+        estimated_hours: 12
+        dependencies: ["BACKEND-005"]
+        
+      - id: "AI-002"
+        title: "Build title generation system"
+        description: "Create AI prompt engineering for Etsy-optimized titles"
+        status: "pending"
+        assignee: "ai-developer"
+        estimated_hours: 8
+        dependencies: ["AI-001"]
+        
+      - id: "AI-003"
+        title: "Implement tag generation with keyword optimization"
+        description: "Create system for generating SEO-optimized tags for Etsy"
+        status: "pending"
+        assignee: "ai-developer"
+        estimated_hours: 8
+        dependencies: ["AI-001"]
+        
+      - id: "AI-004"
+        title: "Build description generation system"
+        description: "Create hybrid AI-generated intro with static product template"
+        status: "pending"
+        assignee: "ai-developer"
+        estimated_hours: 10
+        dependencies: ["AI-001"]
+        
+      - id: "AI-005"
+        title: "Implement low-confidence analysis handling"
+        description: "Create fallback system for when AI analysis produces generic results"
+        status: "pending"
+        assignee: "ai-developer"
+        estimated_hours: 6
+        dependencies: ["AI-001"]
+
+  - name: "Printify Integration"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "PRINTIFY-001"
+        title: "Set up Printify API client"
+        description: "Create service for authenticating and making API calls to Printify"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 6
+        dependencies: ["BACKEND-006"]
+        
+      - id: "PRINTIFY-002"
+        title: "Implement product catalog caching"
+        description: "Create daily refresh system for product data with fallback handling"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 8
+        dependencies: ["PRINTIFY-001"]
+        
+      - id: "PRINTIFY-003"
+        title: "Create color data management system"
+        description: "Implement system to fetch and cache product color information"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 6
+        dependencies: ["PRINTIFY-002"]
+        
+      - id: "PRINTIFY-004"
+        title: "Build API downtime handling"
+        description: "Implement graceful degradation when Printify API is unavailable"
+        status: "pending"
+        assignee: "backend-developer"
+        estimated_hours: 4
+        dependencies: ["PRINTIFY-002"]
+
+  - name: "Testing & Quality Assurance"
+    status: "pending"
+    priority: "medium"
+    tasks:
+      - id: "TEST-001"
+        title: "Set up testing framework"
+        description: "Configure Jest for backend and Vitest for frontend testing"
+        status: "pending"
+        assignee: "qa-engineer"
+        estimated_hours: 4
+        dependencies: ["BACKEND-001", "FRONTEND-001"]
+        
+      - id: "TEST-002"
+        title: "Write backend API tests"
+        description: "Create comprehensive tests for all API endpoints"
+        status: "pending"
+        assignee: "qa-engineer"
+        estimated_hours: 16
+        dependencies: ["TEST-001", "BACKEND-009"]
+        
+      - id: "TEST-003"
+        title: "Write frontend component tests"
+        description: "Create tests for React components and user interactions"
+        status: "pending"
+        assignee: "qa-engineer"
+        estimated_hours: 12
+        dependencies: ["TEST-001", "FRONTEND-009"]
+        
+      - id: "TEST-004"
+        title: "Create integration tests"
+        description: "Test complete user workflows from upload to export"
+        status: "pending"
+        assignee: "qa-engineer"
+        estimated_hours: 8
+        dependencies: ["TEST-002", "TEST-003"]
+        
+      - id: "TEST-005"
+        title: "Performance testing"
+        description: "Test image processing performance and API response times"
+        status: "pending"
+        assignee: "qa-engineer"
+        estimated_hours: 6
+        dependencies: ["TEST-004"]
+
+  - name: "Documentation & Deployment"
+    status: "pending"
+    priority: "medium"
+    tasks:
+      - id: "DOCS-001"
+        title: "Write API documentation"
+        description: "Create comprehensive API documentation with examples"
+        status: "pending"
+        assignee: "technical-writer"
+        estimated_hours: 8
+        dependencies: ["BACKEND-009"]
+        
+      - id: "DOCS-002"
+        title: "Create user guide"
+        description: "Write step-by-step guide for using the application"
+        status: "pending"
+        assignee: "technical-writer"
+        estimated_hours: 6
+        dependencies: ["FRONTEND-009"]
+        
+      - id: "DOCS-003"
+        title: "Write deployment guide"
+        description: "Create production deployment instructions"
+        status: "pending"
+        assignee: "devops-engineer"
+        estimated_hours: 4
+        dependencies: ["TEST-005"]
+        
+      - id: "DEPLOY-001"
+        title: "Set up production environment"
+        description: "Configure production servers, database, and monitoring"
+        status: "pending"
+        assignee: "devops-engineer"
+        estimated_hours: 8
+        dependencies: ["DOCS-003"]
+        
+      - id: "DEPLOY-002"
+        title: "Create CI/CD pipeline"
+        description: "Set up automated testing and deployment pipeline"
+        status: "pending"
+        assignee: "devops-engineer"
+        estimated_hours: 6
+        dependencies: ["DEPLOY-001"]
+
+  - name: "MVP Launch Preparation"
+    status: "pending"
+    priority: "high"
+    tasks:
+      - id: "LAUNCH-001"
+        title: "Final testing and bug fixes"
+        description: "Comprehensive testing and fixing of critical issues"
+        status: "pending"
+        assignee: "team"
+        estimated_hours: 16
+        dependencies: ["TEST-005", "DOCS-002"]
+        
+      - id: "LAUNCH-002"
+        title: "Performance optimization"
+        description: "Optimize image processing and API response times"
+        status: "pending"
+        assignee: "team"
+        estimated_hours: 8
+        dependencies: ["LAUNCH-001"]
+        
+      - id: "LAUNCH-003"
+        title: "Security audit"
+        description: "Review security measures for file uploads and API access"
+        status: "pending"
+        assignee: "security-engineer"
+        estimated_hours: 4
+        dependencies: ["LAUNCH-002"]
+        
+      - id: "LAUNCH-004"
+        title: "Production deployment"
+        description: "Deploy MVP to production environment"
+        status: "pending"
+        assignee: "devops-engineer"
+        estimated_hours: 4
+        dependencies: ["LAUNCH-003"]
+
+success_metrics:
+  primary:
+    - metric: "Time from Design to Listing"
+      target: "Under 15 minutes"
+      current: "1-2 hours"
+      
+  secondary:
+    - metric: "User Adoption Rate"
+      target: "95%+ successful export/copy rate"
+      current: "TBD"
+      
+  technical:
+    - metric: "API Response Time"
+      target: "< 2 seconds for content generation"
+      current: "TBD"
+    - metric: "Image Processing Speed"
+      target: "< 5 seconds per design"
+      current: "TBD"
+
+dependencies:
+  external:
+    - name: "Google Gemini API"
+      status: "required"
+      setup_required: true
+    - name: "Printify API"
+      status: "required"
+      setup_required: true
+    - name: "PostgreSQL Database"
+      status: "required"
+      setup_required: true
+    - name: "Redis Cache"
+      status: "required"
+      setup_required: true
+
+total_estimated_hours: 280
+projected_completion: "8-10 weeks"
