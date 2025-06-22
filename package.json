@@ -25,7 +25,12 @@
     "docker:build": "docker build -f Dockerfile.dev -t app:dev .",
     "docker:clean": "docker-compose down -v",
     "validate": "npm run lint && npm run format:check && npm test && npm run test:vitest",
-    "validate:env": "node scripts/validate-env.js"
+    "validate:env": "node scripts/validate-env.js",
+    "ci:test": "npm run test:coverage && npm run test:vitest:coverage",
+    "ci:lint": "npm run lint && npm run format:check",
+    "ci:build": "npm run build",
+    "ci:security": "npm audit --audit-level=moderate",
+    "ci:full": "npm run ci:lint && npm run ci:test && npm run ci:build && npm run ci:security"
   },
   "keywords": [
     "project-setup",
@@ -52,6 +57,7 @@
     "jest": "^30.0.2",
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.5",
+    "snyk": "^1.1260.0",
     "ts-jest": "^29.4.0",
     "typescript": "5.3.3",
     "vitest": "^3.2.4"

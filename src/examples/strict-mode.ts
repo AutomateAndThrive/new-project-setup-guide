@@ -90,6 +90,7 @@ export const fetchUserData = async (userId: string): Promise<User | null> => {
     const data = await response.json();
     return validateUser(data) ? data : null;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to fetch user:', error);
     return null;
   }
@@ -107,6 +108,7 @@ export const handleApiResponse = <T>(
   if (response.success) {
     return response.data; // TypeScript knows this is T
   } else {
+    // eslint-disable-next-line no-console
     console.error('API Error:', response.error);
     return null;
   }

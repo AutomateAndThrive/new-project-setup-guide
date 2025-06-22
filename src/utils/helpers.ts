@@ -92,6 +92,9 @@ export const formatDate = (date: Date): string => {
  * Shows string validation and regex usage
  */
 export const validateEmail = (email: string): boolean => {
+  // Reject consecutive dots, leading/trailing dots in local or domain part
+  if (/\.\./.test(email)) return false;
+  if (/^\.|\.$|@\.|\.@/.test(email)) return false;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
