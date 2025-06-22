@@ -19,6 +19,7 @@
 #   --database, -db     Database (postgresql, mysql, mongodb, sqlite)
 #   --deployment, -dep  Deployment (docker, kubernetes, serverless)
 #   --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)
+#   --environment, -e   Environment (development, staging, production)
 #   --interactive, -i   Interactive mode for guided setup
 #   --help, -h          Show this help message
 # ==============================================================================
@@ -42,6 +43,7 @@ BACKEND_FRAMEWORK="node"
 DATABASE="postgresql"
 DEPLOYMENT="docker"
 PROJECT_TEMPLATE=""
+ENVIRONMENT="development"
 INTERACTIVE_MODE=false
 
 # Function to show help
@@ -58,6 +60,7 @@ show_help() {
     echo "  --database, -db     Database (postgresql, mysql, mongodb, sqlite)"
     echo "  --deployment, -dep  Deployment (docker, kubernetes, serverless)"
     echo "  --template, -t      Project template (saas, ecommerce, api, dashboard, mobile)"
+    echo "  --environment, -e   Environment (development, staging, production)"
     echo "  --interactive, -i   Interactive mode for guided setup"
     echo "  --help, -h          Show this help message"
     echo ""
@@ -68,10 +71,16 @@ show_help() {
     echo "  dashboard           Admin dashboard with analytics and user management"
     echo "  mobile              Mobile app backend with push notifications"
     echo ""
+    echo "Environments:"
+    echo "  development         Local development setup with hot reloading"
+    echo "  staging            Pre-production environment for testing"
+    echo "  production         Production-ready configuration"
+    echo ""
     echo "Examples:"
     echo "  $0                                    # Use defaults"
     echo "  $0 --name my-app --frontend vue      # Custom project"
     echo "  $0 --template saas                   # SaaS template"
+    echo "  $0 --environment production          # Production setup"
     echo "  $0 --interactive                     # Guided setup"
     echo ""
 }
@@ -253,6 +262,19 @@ interactive_setup() {
             3) DEPLOYMENT="serverless" ;;
             *) DEPLOYMENT="docker" ;;
         esac
+        
+        # Environment
+        echo -e "${YELLOW}Environment:${NC}"
+        echo "1) Development (local development with hot reloading)"
+        echo "2) Staging (pre-production for testing)"
+        echo "3) Production (production-ready configuration)"
+        read -p "Choose environment [1]: " env_choice
+        case ${env_choice:-1} in
+            1) ENVIRONMENT="development" ;;
+            2) ENVIRONMENT="staging" ;;
+            3) ENVIRONMENT="production" ;;
+            *) ENVIRONMENT="development" ;;
+        esac
     fi
     
     echo ""
@@ -297,6 +319,11 @@ while [[ $# -gt 0 ]]; do
             apply_template "$PROJECT_TEMPLATE"
             shift 2
             ;;
+        --environment|-e)
+            ENVIRONMENT="$2"
+            validate_choice "$ENVIRONMENT" "development staging production" "environment"
+            shift 2
+            ;;
         --interactive|-i)
             INTERACTIVE_MODE=true
             shift
@@ -327,13 +354,14 @@ echo -e "${YELLOW}Frontend:${NC} $FRONTEND_FRAMEWORK"
 echo -e "${YELLOW}Backend:${NC} $BACKEND_FRAMEWORK"
 echo -e "${YELLOW}Database:${NC} $DATABASE"
 echo -e "${YELLOW}Deployment:${NC} $DEPLOYMENT"
+echo -e "${YELLOW}Environment:${NC} $ENVIRONMENT"
 echo ""
 
 # Check if project directory already exists
 if [ -d "$PROJECT_NAME" ]; then
     echo -e "${RED}❌ Project directory '$PROJECT_NAME' already exists!${NC}"
     echo -e "${YELLOW}Please remove it or choose a different name.${NC}"
-    exit 1
+  exit 1
 fi
 
 # Create project directory
@@ -395,8 +423,8 @@ case $BACKEND_FRAMEWORK in
         mkdir -p backend/{app/{api,core,models,schemas,services,utils},tests}
         mkdir -p backend/app/api/{endpoints,dependencies}
         mkdir -p backend/app/core/{config,security}
-        mkdir -p backend/app/models
-        mkdir -p backend/app/schemas
+mkdir -p backend/app/models
+mkdir -p backend/app/schemas
         mkdir -p backend/app/services/{api,auth,database}
         ;;
     "dotnet")
@@ -684,113 +712,590 @@ EOF
         ;;
 esac
 
-# Environment configuration
-cat > backend/.env.example << EOF
-# Server Configuration
-PORT=3001
+# Environment-specific configurations
+echo -e "${BLUE}📝 Creating environment configurations for $ENVIRONMENT...${NC}"
+
+# Create environment directory structure
+mkdir -p backend/config/environments
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    mkdir -p frontend/config/environments
+fi
+
+# Backend environment configurations
+case $ENVIRONMENT in
+    "development")
+        cat > backend/.env.example << EOF
+# Development Environment Configuration
 NODE_ENV=development
+PORT=3001
 
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=${PROJECT_NAME//-/_}
+DB_NAME=${PROJECT_NAME//-/_}_dev
 DB_USER=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=postgres
 
 # API Configuration
 API_BASE_URL=http://localhost:3001/api
 CORS_ORIGIN=http://localhost:3000
+
+# Development Features
+DEBUG=true
+LOG_LEVEL=debug
+ENABLE_SWAGGER=true
+ENABLE_GRAPHIQL=true
+
+# Security (Development)
+JWT_SECRET=dev-secret-key-change-in-production
+BCRYPT_ROUNDS=10
+
+# External Services (Development)
+REDIS_URL=redis://localhost:6379
+SMTP_HOST=localhost
+SMTP_PORT=1025
 EOF
 
-# Frontend environment only if frontend exists
+        cat > backend/config/environments/development.js << EOF
+module.exports = {
+  database: {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    name: process.env.DB_NAME || '${PROJECT_NAME//-/_}_dev',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+  },
+  server: {
+    port: process.env.PORT || 3001,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      credentials: true
+    }
+  },
+  features: {
+    debug: process.env.DEBUG === 'true',
+    enableSwagger: process.env.ENABLE_SWAGGER === 'true',
+    enableGraphiQL: process.env.ENABLE_GRAPHIQL === 'true'
+  }
+};
+EOF
+        ;;
+    "staging")
+        cat > backend/.env.example << EOF
+# Staging Environment Configuration
+NODE_ENV=staging
+PORT=3001
+
+# Database Configuration
+DB_HOST=staging-db.example.com
+DB_PORT=5432
+DB_NAME=${PROJECT_NAME//-/_}_staging
+DB_USER=${PROJECT_NAME//-/_}_staging_user
+DB_PASSWORD=your_staging_password
+
+# API Configuration
+API_BASE_URL=https://staging-api.example.com/api
+CORS_ORIGIN=https://staging.example.com
+
+# Staging Features
+DEBUG=false
+LOG_LEVEL=info
+ENABLE_SWAGGER=false
+ENABLE_GRAPHIQL=false
+
+# Security (Staging)
+JWT_SECRET=staging-secret-key-change-in-production
+BCRYPT_ROUNDS=12
+
+# External Services (Staging)
+REDIS_URL=redis://staging-redis.example.com:6379
+SMTP_HOST=smtp.staging.example.com
+SMTP_PORT=587
+EOF
+
+        cat > backend/config/environments/staging.js << EOF
+module.exports = {
+  database: {
+    host: process.env.DB_HOST || 'staging-db.example.com',
+    port: process.env.DB_PORT || 5432,
+    name: process.env.DB_NAME || '${PROJECT_NAME//-/_}_staging',
+    user: process.env.DB_USER || '${PROJECT_NAME//-/_}_staging_user',
+    password: process.env.DB_PASSWORD || 'your_staging_password',
+  },
+  server: {
+    port: process.env.PORT || 3001,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'https://staging.example.com',
+      credentials: true
+    }
+  },
+  features: {
+    debug: false,
+    enableSwagger: false,
+    enableGraphiQL: false
+  }
+};
+EOF
+        ;;
+    "production")
+        cat > backend/.env.example << EOF
+# Production Environment Configuration
+NODE_ENV=production
+PORT=3001
+
+# Database Configuration
+DB_HOST=production-db.example.com
+DB_PORT=5432
+DB_NAME=${PROJECT_NAME//-/_}_prod
+DB_USER=${PROJECT_NAME//-/_}_prod_user
+DB_PASSWORD=your_production_password
+
+# API Configuration
+API_BASE_URL=https://api.example.com/api
+CORS_ORIGIN=https://example.com
+
+# Production Features
+DEBUG=false
+LOG_LEVEL=warn
+ENABLE_SWAGGER=false
+ENABLE_GRAPHIQL=false
+
+# Security (Production)
+JWT_SECRET=your-production-secret-key
+BCRYPT_ROUNDS=14
+
+# External Services (Production)
+REDIS_URL=redis://production-redis.example.com:6379
+SMTP_HOST=smtp.production.example.com
+SMTP_PORT=587
+EOF
+
+        cat > backend/config/environments/production.js << EOF
+module.exports = {
+  database: {
+    host: process.env.DB_HOST || 'production-db.example.com',
+    port: process.env.DB_PORT || 5432,
+    name: process.env.DB_NAME || '${PROJECT_NAME//-/_}_prod',
+    user: process.env.DB_USER || '${PROJECT_NAME//-/_}_prod_user',
+    password: process.env.DB_PASSWORD || 'your_production_password',
+  },
+  server: {
+    port: process.env.PORT || 3001,
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'https://example.com',
+      credentials: true
+    }
+  },
+  features: {
+    debug: false,
+    enableSwagger: false,
+    enableGraphiQL: false
+  }
+};
+EOF
+        ;;
+esac
+
+# Frontend environment configurations (if frontend exists)
 if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    cat > frontend/.env.example << EOF
+    case $ENVIRONMENT in
+        "development")
+            cat > frontend/.env.example << EOF
+# Development Environment Configuration
+VITE_NODE_ENV=development
 VITE_API_BASE_URL=http://localhost:3001/api
 VITE_APP_NAME=$PROJECT_NAME
 VITE_APP_VERSION=1.0.0
+
+# Development Features
+VITE_DEBUG=true
+VITE_ENABLE_DEVTOOLS=true
+VITE_LOG_LEVEL=debug
+
+# External Services (Development)
+VITE_ANALYTICS_ID=
+VITE_SENTRY_DSN=
 EOF
+            ;;
+        "staging")
+            cat > frontend/.env.example << EOF
+# Staging Environment Configuration
+VITE_NODE_ENV=staging
+VITE_API_BASE_URL=https://staging-api.example.com/api
+VITE_APP_NAME=$PROJECT_NAME
+VITE_APP_VERSION=1.0.0
+
+# Staging Features
+VITE_DEBUG=false
+VITE_ENABLE_DEVTOOLS=false
+VITE_LOG_LEVEL=info
+
+# External Services (Staging)
+VITE_ANALYTICS_ID=staging-analytics-id
+VITE_SENTRY_DSN=https://staging-sentry.example.com
+EOF
+            ;;
+        "production")
+            cat > frontend/.env.example << EOF
+# Production Environment Configuration
+VITE_NODE_ENV=production
+VITE_API_BASE_URL=https://api.example.com/api
+VITE_APP_NAME=$PROJECT_NAME
+VITE_APP_VERSION=1.0.0
+
+# Production Features
+VITE_DEBUG=false
+VITE_ENABLE_DEVTOOLS=false
+VITE_LOG_LEVEL=warn
+
+# External Services (Production)
+VITE_ANALYTICS_ID=production-analytics-id
+VITE_SENTRY_DSN=https://production-sentry.example.com
+EOF
+            ;;
+    esac
 fi
 
-# Docker configuration - adjust based on project type
-if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    cat > docker-compose.yml << EOF
+# Environment-specific Docker configurations
+echo -e "${BLUE}📝 Creating Docker configurations for $ENVIRONMENT...${NC}"
+
+case $ENVIRONMENT in
+    "development")
+        if [ -n "$FRONTEND_FRAMEWORK" ]; then
+            cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
       - VITE_API_BASE_URL=http://localhost:3001/api
+      - VITE_NODE_ENV=development
     depends_on:
       - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    command: npm run dev
 
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
       - DB_HOST=database
+      - DEBUG=true
     depends_on:
       - database
+      - redis
     volumes:
       - ./backend:/app
       - /app/node_modules
+    command: npm run dev
 
   database:
     image: postgres:15
     environment:
-      POSTGRES_DB: ${PROJECT_NAME//-/_}
+      POSTGRES_DB: ${PROJECT_NAME//-/_}_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   postgres_data:
+  redis_data:
 EOF
-else
-    cat > docker-compose.yml << EOF
+        else
+            cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
       - DB_HOST=database
+      - DEBUG=true
     depends_on:
       - database
+      - redis
     volumes:
       - ./backend:/app
       - /app/node_modules
+    command: npm run dev
 
   database:
     image: postgres:15
     environment:
-      POSTGRES_DB: ${PROJECT_NAME//-/_}
+      POSTGRES_DB: ${PROJECT_NAME//-/_}_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
 volumes:
   postgres_data:
+  redis_data:
 EOF
-fi
+        fi
+        ;;
+    "staging")
+        if [ -n "$FRONTEND_FRAMEWORK" ]; then
+            cat > docker-compose.yml << EOF
+version: '3.8'
 
-# Create README - adjust based on project type
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=https://staging-api.example.com/api
+      - VITE_NODE_ENV=staging
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=staging
+      - DB_HOST=database
+      - DEBUG=false
+    depends_on:
+      - database
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${PROJECT_NAME//-/_}_staging
+      POSTGRES_USER: ${PROJECT_NAME//-/_}_staging_user
+      POSTGRES_PASSWORD: your_staging_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+EOF
+        else
+            cat > docker-compose.yml << EOF
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=staging
+      - DB_HOST=database
+      - DEBUG=false
+    depends_on:
+      - database
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${PROJECT_NAME//-/_}_staging
+      POSTGRES_USER: ${PROJECT_NAME//-/_}_staging_user
+      POSTGRES_PASSWORD: your_staging_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+EOF
+        fi
+        ;;
+    "production")
+        if [ -n "$FRONTEND_FRAMEWORK" ]; then
+            cat > docker-compose.yml << EOF
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=https://api.example.com/api
+      - VITE_NODE_ENV=production
+    depends_on:
+      - backend
+    restart: always
+    deploy:
+      replicas: 2
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=database
+      - DEBUG=false
+    depends_on:
+      - database
+      - redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      replicas: 3
+
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${PROJECT_NAME//-/_}_prod
+      POSTGRES_USER: ${PROJECT_NAME//-/_}_prod_user
+      POSTGRES_PASSWORD: your_production_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+EOF
+        else
+            cat > docker-compose.yml << EOF
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=database
+      - DEBUG=false
+    depends_on:
+      - database
+      - redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      replicas: 3
+
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${PROJECT_NAME//-/_}_prod
+      POSTGRES_USER: ${PROJECT_NAME//-/_}_prod_user
+      POSTGRES_PASSWORD: your_production_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+EOF
+        fi
+        ;;
+esac
+
+# Create README - adjust based on project type and environment
 if [ -n "$FRONTEND_FRAMEWORK" ]; then
     cat > README.md << EOF
 # $PROJECT_NAME
@@ -821,6 +1326,9 @@ $PROJECT_DESCRIPTION
 $PROJECT_NAME/
 ├── frontend/          # $FRONTEND_FRAMEWORK application
 ├── backend/           # $BACKEND_FRAMEWORK API server
+│   ├── config/environments/  # Environment-specific configs
+│   ├── migrations/    # Database migrations
+│   └── seeds/         # Seed data
 ├── docs/             # Documentation
 ├── scripts/          # Utility scripts
 └── tests/            # Test files
@@ -832,6 +1340,14 @@ $PROJECT_NAME/
 - **Backend**: $BACKEND_FRAMEWORK
 - **Database**: $DATABASE
 - **Deployment**: $DEPLOYMENT
+- **Environment**: $ENVIRONMENT
+
+## 🌍 Environment Configuration
+
+This project is configured for **$ENVIRONMENT** environment with:
+- Environment-specific database configurations
+- Docker Compose setup for $ENVIRONMENT
+- Appropriate security and debugging settings
 
 ## 📝 License
 
@@ -865,6 +1381,9 @@ $PROJECT_DESCRIPTION
 \`\`\`
 $PROJECT_NAME/
 ├── backend/           # $BACKEND_FRAMEWORK API server
+│   ├── config/environments/  # Environment-specific configs
+│   ├── migrations/    # Database migrations
+│   └── seeds/         # Seed data
 ├── docs/             # Documentation
 ├── scripts/          # Utility scripts
 └── tests/            # Test files
@@ -875,6 +1394,14 @@ $PROJECT_NAME/
 - **Backend**: $BACKEND_FRAMEWORK
 - **Database**: $DATABASE
 - **Deployment**: $DEPLOYMENT
+- **Environment**: $ENVIRONMENT
+
+## 🌍 Environment Configuration
+
+This project is configured for **$ENVIRONMENT** environment with:
+- Environment-specific database configurations
+- Docker Compose setup for $ENVIRONMENT
+- Appropriate security and debugging settings
 
 ## 📝 License
 
@@ -895,36 +1422,178 @@ cat > docs/development/README.md << EOF
 ## Setup Instructions
 
 1. **Clone and install:**
-   \`\`\`bash
+   ```bash
    git clone <repository-url>
    cd $PROJECT_NAME
    npm run install:all
-   \`\`\`
+   ```
 
 2. **Environment configuration:**
    - Copy .env.example files and configure your settings
    - Ensure database connection details are correct
+   - Update environment-specific configurations in `backend/config/environments/`
 
-3. **Start development:**
-   \`\`\`bash
+3. **Database setup:**
+   ```bash
+   # Run migrations
+   cd backend
+   ./scripts/migrate.sh
+   ```
+
+4. **Start development:**
+   ```bash
    npm run dev
-   \`\`\`
+   ```
 
 ## Development Workflow
-
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    echo "1. **Frontend**: http://localhost:3000"
-fi)
-1. **Backend API**: http://localhost:3001
-2. **Database**: localhost:5432
-
-## Key Development Commands
-
-- \`npm run dev\` - Start $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "both frontend and backend"; else echo "backend server"; fi)
-- \`npm run test\` - Run all tests
-- \`npm run lint\` - Run linting
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "- \`npm run build\` - Build for production"; fi)
 EOF
+
+# Append dynamic workflow section
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+  echo "1. **Frontend**: http://localhost:3000" >> docs/development/README.md
+fi
+echo "1. **Backend API**: http://localhost:3001" >> docs/development/README.md
+echo "2. **Database**: localhost:5432" >> docs/development/README.md
+if [ "$ENVIRONMENT" = "development" ]; then
+  echo "3. **MailHog**: http://localhost:8025 (email testing)" >> docs/development/README.md
+fi
+
+echo "\n## Environment-Specific Features\n" >> docs/development/README.md
+echo "### $ENVIRONMENT Environment" >> docs/development/README.md
+case $ENVIRONMENT in
+  "development")
+    echo "- Hot reloading enabled" >> docs/development/README.md
+    echo "- Debug mode active" >> docs/development/README.md
+    echo "- Swagger/GraphiQL available" >> docs/development/README.md
+    echo "- Seed data loaded" >> docs/development/README.md
+    echo "- MailHog for email testing" >> docs/development/README.md
+    ;;
+  "staging")
+    echo "- Production-like configuration" >> docs/development/README.md
+    echo "- Health checks enabled" >> docs/development/README.md
+    echo "- Restart policies configured" >> docs/development/README.md
+    ;;
+  "production")
+    echo "- Optimized for performance" >> docs/development/README.md
+    echo "- Multiple replicas configured" >> docs/development/README.md
+    echo "- Health checks and monitoring" >> docs/development/README.md
+    echo "- Production security settings" >> docs/development/README.md
+    ;;
+esac
+
+echo "\n## Key Development Commands\n" >> docs/development/README.md
+echo "- \`npm run dev\` - Start $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "both frontend and backend"; else echo "backend server"; fi)" >> docs/development/README.md
+echo "- \`npm run test\` - Run all tests" >> docs/development/README.md
+echo "- \`npm run lint\` - Run linting" >> docs/development/README.md
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+  echo "- \`npm run build\` - Build for production" >> docs/development/README.md
+fi
+echo "- \`cd backend && ./scripts/migrate.sh\` - Run database migrations" >> docs/development/README.md
+
+echo "\n## Docker Commands\n" >> docs/development/README.md
+echo "- \`docker-compose up\` - Start all services" >> docs/development/README.md
+echo "- \`docker-compose up -d\` - Start in background" >> docs/development/README.md
+echo "- \`docker-compose down\` - Stop all services" >> docs/development/README.md
+echo "- \`docker-compose logs -f\` - Follow logs" >> docs/development/README.md
+
+# Database migration templates
+echo -e "${BLUE}📝 Creating database migration templates...${NC}"
+
+# Create migration directory structure
+mkdir -p backend/migrations
+mkdir -p backend/seeds
+mkdir -p backend/scripts
+
+# Initial migration file
+cat > backend/migrations/001_initial_schema.sql << EOF
+-- Initial database schema for $PROJECT_NAME
+-- Created: $(date)
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on email
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Update timestamp trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS \$\$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+\$\$ language 'plpgsql';
+
+-- Add trigger to users table
+CREATE TRIGGER update_users_updated_at 
+    BEFORE UPDATE ON users 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+EOF
+
+# Seed data for development
+cat > backend/seeds/001_development_data.sql << EOF
+-- Development seed data for $PROJECT_NAME
+-- This file is only used in development environment
+
+-- Insert sample users
+INSERT INTO users (email, password_hash, first_name, last_name) VALUES
+('admin@example.com', '\$2b\$10\$example.hash.here', 'Admin', 'User'),
+('user@example.com', '\$2b\$10\$example.hash.here', 'Test', 'User')
+ON CONFLICT (email) DO NOTHING;
+EOF
+
+# Migration runner script
+cat > backend/scripts/migrate.sh << 'EOF'
+#!/bin/bash
+
+# Database migration script
+set -e
+
+ENVIRONMENT=${NODE_ENV:-development}
+DB_HOST=${DB_HOST:-localhost}
+DB_PORT=${DB_PORT:-5432}
+DB_NAME=${DB_NAME:-my_project_dev}
+DB_USER=${DB_USER:-postgres}
+
+echo "Running migrations for environment: $ENVIRONMENT"
+echo "Database: $DB_NAME on $DB_HOST:$DB_PORT"
+
+# Run migrations
+for file in migrations/*.sql; do
+    if [ -f "$file" ]; then
+        echo "Running migration: $file"
+        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$file"
+    fi
+done
+
+# Run seeds only in development
+if [ "$ENVIRONMENT" = "development" ]; then
+    echo "Running seed data for development..."
+    for file in seeds/*.sql; do
+        if [ -f "$file" ]; then
+            echo "Running seed: $file"
+            PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$file"
+        fi
+    done
+fi
+
+echo "Migrations completed successfully!"
+EOF
+
+chmod +x backend/scripts/migrate.sh
 
 echo -e "${GREEN}✅ Project structure created successfully!${NC}"
 echo ""
@@ -937,15 +1606,19 @@ echo -e "   ${GREEN}npm run install:all${NC}"
 echo ""
 echo -e "${YELLOW}3.${NC} Set up environment variables:"
 echo -e "   ${GREEN}cp backend/.env.example backend/.env${NC}"
-$(if [ -n "$FRONTEND_FRAMEWORK" ]; then
-    echo "echo -e \"   ${GREEN}cp frontend/.env.example frontend/.env${NC}\""
-fi)
+if [ -n "$FRONTEND_FRAMEWORK" ]; then
+    echo -e "   ${GREEN}cp frontend/.env.example frontend/.env${NC}"
+fi
 echo ""
-echo -e "${YELLOW}4.${NC} Start the development $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "servers"; else echo "server"; fi):"
+echo -e "${YELLOW}4.${NC} Set up database:"
+echo -e "   ${GREEN}cd backend && ./scripts/migrate.sh${NC}"
+echo ""
+echo -e "${YELLOW}5.${NC} Start the development $(if [ -n "$FRONTEND_FRAMEWORK" ]; then echo "servers"; else echo "server"; fi):"
 echo -e "   ${GREEN}npm run dev${NC}"
 echo ""
-echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for development!${NC}"
+echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for $ENVIRONMENT development!${NC}"
 echo ""
 echo -e "${YELLOW}📚 Check the docs/ directory for detailed guides.${NC}"
+echo -e "${YELLOW}🌍 Environment: $ENVIRONMENT configuration applied.${NC}"
 
 exit 0
