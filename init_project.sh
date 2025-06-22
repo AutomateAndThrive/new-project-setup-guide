@@ -1822,20 +1822,11 @@ main() {
     # Create project structure
     create_directory_structure
     
-    # Create configuration files
+    # Create configuration files (includes all enforcement tools)
     create_configuration_files
     
     # Create environment-specific files
     create_environment_files
-    
-    # Create database migrations and seeds
-    create_database_files
-    
-    # Create backend starter files
-    create_backend_files
-    
-    # Create frontend starter files
-    create_frontend_files
     
     # Create development scripts
     create_development_scripts
@@ -1847,7 +1838,22 @@ main() {
     create_enforcement_setup
     
     # Show final summary
-    create_final_summary
+    log_success "Project '$PROJECT_NAME' setup completed successfully!"
+    echo ""
+    print -P "%F{blue}📋 Next Steps:%f"
+    print -P "%F{yellow}1.%f Navigate to the project directory:"
+    print -P "   %F{green}cd $PROJECT_NAME%f"
+    echo ""
+    print -P "%F{yellow}2.%f Install dependencies:"
+    print -P "   %F{green}npm install%f"
+    echo ""
+    print -P "%F{yellow}3.%f Set up Git hooks:"
+    print -P "   %F{green}npm run prepare%f"
+    echo ""
+    print -P "%F{yellow}4.%f Start development:"
+    print -P "   %F{green}npm run dev%f"
+    echo ""
+    print -P "%F{cyan}Happy coding! 🎉%f"
 }
 
 # Run main function
