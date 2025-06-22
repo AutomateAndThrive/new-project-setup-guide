@@ -443,7 +443,7 @@ create_configuration_files() {
         return
     fi
     
-    # Create root package.json for monorepo
+    # Create root package.json for monorepo with enhanced enforcement tools
     cat > package.json << 'EOF'
 {
   "name": "'$PROJECT_NAME'",
@@ -467,30 +467,250 @@ create_configuration_files() {
     "test": "npm run test:frontend && npm run test:backend",
     "test:frontend": "cd frontend && npm test",
     "test:backend": "cd backend && npm test",
+    "test:coverage": "npm run test:coverage:frontend && npm run test:coverage:backend",
+    "test:coverage:frontend": "cd frontend && npm run test:coverage",
+    "test:coverage:backend": "cd backend && npm run test:coverage",
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest",
+    "test:vitest:coverage": "vitest run --coverage",
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && npm run lint",
+    "lint:fix": "npm run lint:fix:frontend && npm run lint:fix:backend",
+    "lint:fix:frontend": "cd frontend && npm run lint:fix",
+    "lint:fix:backend": "cd backend && npm run lint:fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
-    "prepare": "husky install"
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "prepare": "husky install",
+    "validate": "npm run lint && npm run format:check && npm test && npm run test:vitest",
+    "validate:env": "node scripts/validate-env.js",
+    "ci:test": "npm run test:coverage && npm run test:vitest:coverage",
+    "ci:lint": "npm run lint && npm run format:check",
+    "ci:build": "npm run build",
+    "ci:security": "npm audit --audit-level=moderate",
+    "ci:full": "npm run ci:lint && npm run ci:test && npm run ci:build && npm run ci:security",
+    "docs:generate": "typedoc",
+    "docs:serve": "typedoc --serve",
+    "docs:watch": "typedoc --watch"
   },
   "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "concurrently": "^8.2.2",
-    "prettier": "^3.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-node": "^11.1.0",
     "husky": "^8.0.3",
-    "lint-staged": "^15.2.0"
+    "jest": "^30.0.2",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.5",
+    "snyk": "^1.1260.0",
+    "ts-jest": "^29.4.0",
+    "typedoc": "^0.28.5",
+    "typedoc-plugin-markdown": "^4.7.0",
+    "typescript": "5.3.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
+      "npm run lint",
+      "npm run format"
     ],
-    "*.{json,css,md}": [
-      "prettier --write"
+    "*.{md,json,yml,yaml}": [
+      "npm run format"
     ]
   },
-  "keywords": ["monorepo", "fullstack", "webapp"],
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "keywords": ["monorepo", "fullstack", "webapp", "enforcement", "quality-gates"],
   "author": "Your Team",
   "license": "MIT"
+}
+EOF
+
+    # Create TypeScript configuration
+    cat > tsconfig.json << 'EOF'
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}
+EOF
+
+    # Create ESLint configuration
+    cat > .eslintrc.js << 'EOF'
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2021: true,
+    node: true,
+    jest: true,
+  },
+  extends: [
+    'eslint:recommended',
+    '@typescript-eslint/recommended',
+    'prettier',
+  ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  },
+  plugins: ['@typescript-eslint', 'import', 'node'],
+  rules: {
+    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'import/order': [
+      'error',
+      {
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+        ],
+        'newlines-between': 'always',
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+      },
+    ],
+    'no-console': 'warn',
+    'no-debugger': 'error',
+  },
+  ignorePatterns: ['dist/', 'build/', 'coverage/', 'node_modules/'],
+};
+EOF
+
+    # Create Prettier configuration
+    cat > .prettierrc << 'EOF'
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "avoid"
+}
+EOF
+
+    # Create Jest configuration
+    cat > jest.config.js << 'EOF'
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src', '<rootDir>/test'],
+  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.ts',
+    '!src/**/*.spec.ts',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+};
+EOF
+
+    # Create Vitest configuration
+    cat > vitest.config.ts << 'EOF'
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+    },
+  },
+});
+EOF
+
+    # Create TypeDoc configuration
+    cat > typedoc.json << 'EOF'
+{
+  "entryPoints": ["src/**/*.ts"],
+  "out": "docs/api",
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "theme": "default",
+  "name": "'$PROJECT_NAME' API",
+  "readme": "README.md",
+  "categorizeByGroup": true,
+  "categoryOrder": ["Utilities", "Types", "Examples", "*"],
+  "sort": ["source-order"],
+  "searchInComments": true,
+  "validation": {
+    "invalidLink": true,
+    "notExported": true
+  },
+  "gitRevision": "main",
+  "gitRemote": "origin",
+  "excludeNotDocumented": false,
+  "excludeNotDocumentedKinds": ["Module"],
+  "plugin": ["typedoc-plugin-markdown"],
+  "hideGenerator": true,
+  "cleanOutputDir": true
 }
 EOF
 
@@ -1062,7 +1282,7 @@ create_cicd_workflows() {
     
     mkdir -p .github/workflows
     
-    # Create main CI workflow
+    # Create main CI workflow with enhanced quality gates
     cat > .github/workflows/ci.yml << 'EOF'
 name: CI
 
@@ -1073,8 +1293,31 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test:
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run ESLint
+      run: npm run lint
+    
+    - name: Check formatting
+      run: npm run format:check
+
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    needs: lint
     
     services:
       postgres:
@@ -1100,33 +1343,28 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm run install:all
+      run: npm install
     
-    - name: Run linting
-      run: npm run lint
-    
-    - name: Run tests
-      run: npm run test
+    - name: Run Jest tests with coverage
+      run: npm run test:coverage
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
     
-    - name: Build project
-      run: npm run build
-EOF
-
-    # Create deployment workflows for each environment
-    cat > .github/workflows/deploy-$ENVIRONMENT.yml << 'EOF'
-name: Deploy to '$ENVIRONMENT'
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+    - name: Run Vitest tests with coverage
+      run: npm run test:vitest:coverage
     
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
     steps:
     - uses: actions/checkout@v4
     
@@ -1137,646 +1375,360 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm run install:all
+      run: npm install
     
     - name: Build project
       run: npm run build
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
     
-    - name: Deploy to '$ENVIRONMENT'
-      run: |
-        echo "🚀 Deploying to '$ENVIRONMENT' environment..."
-        # Add your deployment logic here
-        # This could be deploying to AWS, GCP, Azure, etc.
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate
+    
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Generate API documentation
+      run: npm run docs:generate
+    
+    - name: Upload documentation artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-docs
+        path: docs/api/
+EOF
+
+    # Create dependency updates workflow
+    cat > .github/workflows/dependency-updates.yml << 'EOF'
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Check for outdated packages
+      run: npm outdated || true
+    
+    - name: Create Pull Request for updates
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore(deps): update dependencies'
+        title: 'chore(deps): update dependencies'
+        body: |
+          Automated dependency updates
+          
+          This PR updates outdated dependencies to their latest versions.
+          
+          Please review the changes and test thoroughly before merging.
+        branch: chore/update-dependencies
+        delete-branch: true
+EOF
+
+    # Create PR template
+    mkdir -p .github
+    cat > .github/pull_request_template.md << 'EOF'
+# Pull Request
+
+## 🎯 Description
+<!-- Describe what this PR does and why it's needed -->
+
+## 🔍 Changes Made
+<!-- List the main changes in this PR -->
+- [ ] Change 1
+- [ ] Change 2
+
+## 🧪 Testing
+<!-- Describe how you tested these changes -->
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+- [ ] Coverage meets 80% minimum
+
+## 📊 Quality Checklist
+<!-- Ensure all quality gates are met -->
+- [ ] Code follows project style guidelines
+- [ ] All linting checks pass
+- [ ] Code is properly formatted
+- [ ] No console.log statements in production code
+- [ ] Documentation updated if needed
+- [ ] No breaking changes (or breaking changes documented)
+
+## 🔐 Security
+<!-- Security considerations -->
+- [ ] No sensitive data exposed
+- [ ] Input validation implemented
+- [ ] Dependencies checked for vulnerabilities
+
+## 📝 Additional Notes
+<!-- Any additional information -->
+
+## 🎯 Related Issues
+<!-- Link to related issues -->
+Closes #
+EOF
+
+    # Create Dependabot configuration
+    cat > .github/dependabot.yml << 'EOF'
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "your-team"
+    assignees:
+      - "your-team"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    ignore:
+      # Ignore major version updates for critical packages
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+EOF
+
+    # Create branch protection configuration
+    cat > .github/branch-protection.yml << 'EOF'
+# Branch Protection Rules Configuration
+# This file documents the branch protection rules that should be applied
+
+## Main Branch Protection
+- Require pull request reviews before merging
+- Require status checks to pass before merging
+- Require branches to be up to date before merging
+- Include administrators in restrictions
+- Restrict pushes that create files larger than 100 MB
+
+## Required Status Checks
+- lint
+- test
+- build
+- security
+- docs
+
+## Required Reviewers
+- At least 2 approving reviews for main branch
+- At least 1 approving review for develop branch
+- Dismiss stale PR approvals when new commits are pushed
+
+## Restrictions
+- No direct pushes to main or develop branches
+- No force pushes
+- No deletion of protected branches
 EOF
 
     log_success "CI/CD workflows created successfully!"
 }
 
-# Function to create final summary and next steps
-create_final_summary() {
-    echo ""
-    print -P "%F{green}🎉 Project '$PROJECT_NAME' created successfully!%f"
-    echo ""
-    print -P "%F{blue}📋 Next Steps:%f"
-    print -P "%F{yellow}1.%f Navigate to the project directory:"
-    print -P "   %F{green}cd $PROJECT_NAME%f"
-    echo ""
-    print -P "%F{yellow}2.%f Install all dependencies:"
-    print -P "   %F{green}npm run install:all%f"
-    echo ""
-    print -P "%F{yellow}3.%f Set up environment variables for $ENVIRONMENT:"
-    print -P "   %F{green}cp backend/.env.$ENVIRONMENT backend/.env%f"
-    if [[ -n "$FRONTEND_FRAMEWORK" ]]; then
-        print -P "   %F{green}cp frontend/.env.$ENVIRONMENT frontend/.env%f"
-    fi
-    echo ""
-    print -P "%F{yellow}4.%f Set up database:"
-    print -P "   %F{green}cd backend && ./scripts/migrate.sh%f"
-    echo ""
-    print -P "%F{yellow}5.%f Start the $ENVIRONMENT environment:"
-    print -P "   %F{green}./scripts/start-$ENVIRONMENT.sh local%f"
-    print -P "   %F{green}   or%f"
-    print -P "   %F{green}./scripts/start-$ENVIRONMENT.sh docker%f"
-    echo ""
-    print -P "%F{yellow}6.%f Configure CI/CD (optional):"
-    print -P "   %F{green}📚 Review .github/workflows/ for GitHub Actions%f"
-    print -P "   %F{green}🔐 Set up repository secrets for deployment%f"
-    echo ""
-    print -P "%F{blue}🎯 Project Features:%f"
-    print -P "%F{yellow}•%f Professional project structure"
-    print -P "%F{yellow}•%f Pre-configured dev tools (ESLint, Prettier, Husky)"
-    print -P "%F{yellow}•%f Docker and CI/CD configurations"
-    print -P "%F{yellow}•%f Environment-specific settings"
-    print -P "%F{yellow}•%f Database setup and migrations"
-    print -P "%F{yellow}•%f Testing framework"
-    print -P "%F{yellow}•%f Development scripts"
-    echo ""
-    print -P "%F{blue}🌍 Environment:%f $ENVIRONMENT configuration applied"
-    print -P "%F{blue}🚀 Quick start:%f ./scripts/start-$ENVIRONMENT.sh local"
-    print -P "%F{blue}🔧 CI/CD:%f GitHub Actions workflows configured"
-    echo ""
-    print -P "%F{cyan}Happy coding! 🎉%f"
-}
-
-# Function to create database migrations and seeds
-create_database_files() {
-    log_info "Creating database migrations and seeds..."
+# Function to create Husky hooks and enforcement setup
+create_enforcement_setup() {
+    log_info "Setting up enforcement tools..."
     
     if [[ "$DRY_RUN" == true ]]; then
-        log_verbose "Would create database files"
+        log_verbose "Would create enforcement setup"
         return
     fi
     
-    # Create migration directory structure
-    mkdir -p backend/migrations
-    mkdir -p backend/seeds
-    mkdir -p backend/scripts
+    # Create scripts directory
+    mkdir -p scripts
     
-    # Initial migration file
-    cat > backend/migrations/001_initial_schema.sql << 'EOF'
--- Initial database schema for '$PROJECT_NAME'
--- Created: $(date)
+    # Create environment validation script
+    cat > scripts/validate-env.js << 'EOF'
+#!/usr/bin/env node
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+/**
+ * Environment validation script
+ * Validates that all required environment variables are set
+ */
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+const fs = require('fs');
+const path = require('path');
 
--- Create index on email
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+const requiredEnvVars = [
+  'NODE_ENV',
+  'PORT',
+  'DATABASE_URL',
+  'JWT_SECRET'
+];
 
--- Update timestamp trigger function
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Add trigger to users table
-CREATE TRIGGER update_users_updated_at 
-    BEFORE UPDATE ON users 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-EOF
-
-    # Seed data for development
-    cat > backend/seeds/001_development_data.sql << 'EOF'
--- Development seed data for '$PROJECT_NAME'
--- This file is only used in development environment
-
--- Insert sample users
-INSERT INTO users (email, password_hash, first_name, last_name) VALUES
-('admin@example.com', '$2b$10$example.hash.here', 'Admin', 'User'),
-('user@example.com', '$2b$10$example.hash.here', 'Test', 'User')
-ON CONFLICT (email) DO NOTHING;
-EOF
-
-    # Migration runner script
-    cat > backend/scripts/migrate.sh << 'EOF'
-#!/bin/zsh
-
-# Database migration script
-set -e
-
-ENVIRONMENT=${NODE_ENV:-development}
-DB_HOST=${DB_HOST:-localhost}
-DB_PORT=${DB_PORT:-5432}
-DB_NAME=${DB_NAME:-'$PROJECT_NAME'_dev}
-DB_USER=${DB_USER:-postgres}
-
-echo "Running migrations for environment: $ENVIRONMENT"
-echo "Database: $DB_NAME on $DB_HOST:$DB_PORT"
-
-# Run migrations
-for file in migrations/*.sql; do
-    if [[ -f "$file" ]]; then
-        echo "Running migration: $file"
-        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$file"
-    fi
-done
-
-# Run seeds only in development
-if [[ "$ENVIRONMENT" == "development" ]]; then
-    echo "Running seed data for development..."
-    for file in seeds/*.sql; do
-        if [[ -f "$file" ]]; then
-            echo "Running seed: $file"
-            PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$file"
-        fi
-    done
-fi
-
-echo "Migrations completed successfully!"
-EOF
-
-    chmod +x backend/scripts/migrate.sh
-    
-    log_success "Database migrations and seeds created successfully!"
-}
-
-# Function to create backend starter files
-create_backend_files() {
-    log_info "Creating backend starter files..."
-    
-    if [[ "$DRY_RUN" == true ]]; then
-        log_verbose "Would create backend files"
-        return
-    fi
-    
-    case $BACKEND_FRAMEWORK in
-        "node")
-            # Main server file
-            cat > backend/src/index.js << 'EOF'
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
-}));
-app.use(morgan('combined'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// API routes
-app.use('/api', require('./routes'));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-});
-
-module.exports = app;
-EOF
-
-            # Routes index
-            cat > backend/src/routes/index.js << 'EOF'
-const express = require('express');
-const router = express.Router();
-
-// Import route modules
-const authRoutes = require('./auth');
-const userRoutes = require('./users');
-
-// Mount routes
-router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-
-// API info endpoint
-router.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to '$PROJECT_NAME' API',
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    endpoints: {
-      auth: '/api/auth',
-      users: '/api/users',
-      health: '/health'
+function validateEnvironment() {
+  console.log('🔍 Validating environment configuration...');
+  
+  const missingVars = [];
+  
+  for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+      missingVars.push(envVar);
     }
-  });
-});
+  }
+  
+  if (missingVars.length > 0) {
+    console.error('❌ Missing required environment variables:');
+    missingVars.forEach(varName => {
+      console.error(`   - ${varName}`);
+    });
+    console.error('\nPlease set these variables in your .env file');
+    process.exit(1);
+  }
+  
+  console.log('✅ Environment validation passed');
+}
 
-module.exports = router;
+if (require.main === module) {
+  validateEnvironment();
+}
+
+module.exports = { validateEnvironment };
 EOF
 
-            # Auth routes
-            cat > backend/src/routes/auth.js << 'EOF'
-const express = require('express');
-const router = express.Router();
+    chmod +x scripts/validate-env.js
+    
+    # Create test setup file
+    cat > test/setup.ts << 'EOF'
+/**
+ * Test setup file
+ * Configure test environment and global test utilities
+ */
 
-// Login endpoint
-router.post('/login', (req, res) => {
-  // TODO: Implement login logic
-  res.json({ message: 'Login endpoint - implement authentication logic' });
+import '@testing-library/jest-dom';
+
+// Global test configuration
+beforeAll(() => {
+  // Setup test environment
+  process.env.NODE_ENV = 'test';
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test_db';
 });
 
-// Register endpoint
-router.post('/register', (req, res) => {
-  // TODO: Implement registration logic
-  res.json({ message: 'Register endpoint - implement user creation logic' });
+afterAll(() => {
+  // Cleanup test environment
 });
 
-// Logout endpoint
-router.post('/logout', (req, res) => {
-  // TODO: Implement logout logic
-  res.json({ message: 'Logout endpoint - implement session cleanup' });
-});
-
-module.exports = router;
+// Global test utilities
+global.console = {
+  ...console,
+  // Suppress console.log in tests unless explicitly needed
+  log: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 EOF
 
-            # User routes
-            cat > backend/src/routes/users.js << 'EOF'
-const express = require('express');
-const router = express.Router();
-
-// Get all users
-router.get('/', (req, res) => {
-  // TODO: Implement user listing logic
-  res.json({ message: 'Get users endpoint - implement user listing logic' });
-});
-
-// Get user by ID
-router.get('/:id', (req, res) => {
-  // TODO: Implement user retrieval logic
-  res.json({ message: `Get user ${req.params.id} - implement user retrieval logic` });
-});
-
-// Update user
-router.put('/:id', (req, res) => {
-  // TODO: Implement user update logic
-  res.json({ message: `Update user ${req.params.id} - implement user update logic` });
-});
-
-// Delete user
-router.delete('/:id', (req, res) => {
-  // TODO: Implement user deletion logic
-  res.json({ message: `Delete user ${req.params.id} - implement user deletion logic` });
-});
-
-module.exports = router;
-EOF
-
-            # Database configuration
-            cat > backend/src/config/database.js << 'EOF'
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-
-// Test database connection
-pool.on('connect', () => {
-  console.log('📊 Connected to database');
-});
-
-pool.on('error', (err) => {
-  console.error('❌ Database connection error:', err);
-});
-
-module.exports = pool;
-EOF
-
-            # Backend package.json
-            cat > backend/package.json << 'EOF'
+    # Create VS Code settings
+    mkdir -p .vscode
+    cat > .vscode/settings.json << 'EOF'
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "'$PROJECT_NAME' Backend API",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest",
-    "lint": "eslint src/",
-    "db:setup": "./scripts/migrate.sh"
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
-    "dotenv": "^16.3.1",
-    "pg": "^8.11.3",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "express-validator": "^7.0.1"
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/coverage": true,
+    "**/.git": true
   },
-  "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0",
-    "eslint": "^8.55.0",
-    "supertest": "^6.3.3"
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/coverage": true
   },
-  "keywords": ["api", "backend", "express", "nodejs"],
-  "author": "Your Team",
-  "license": "MIT"
-}
-EOF
-            ;;
-    esac
-    
-    log_success "Backend starter files created successfully!"
-}
-
-# Function to create frontend starter files
-create_frontend_files() {
-    if [[ -z "$FRONTEND_FRAMEWORK" ]]; then
-        return
-    fi
-    
-    log_info "Creating frontend starter files..."
-    
-    if [[ "$DRY_RUN" == true ]]; then
-        log_verbose "Would create frontend files"
-        return
-    fi
-    
-    case $FRONTEND_FRAMEWORK in
-        "react")
-            # Main React entry point
-            cat > frontend/src/main.jsx << 'EOF'
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-EOF
-
-            # Main App component
-            cat > frontend/src/App.jsx << 'EOF'
-import React, { useState, useEffect } from 'react'
-import './App.css'
-
-function App() {
-  const [health, setHealth] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Test API connection
-    fetch('http://localhost:3001/health')
-      .then(res => res.json())
-      .then(data => {
-        setHealth(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('API connection failed:', err)
-        setLoading(false)
-      })
-  }, [])
-
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Welcome to '$PROJECT_NAME'</h1>
-        <p>A modern web application built with React</p>
-        
-        {loading ? (
-          <p>Connecting to API...</p>
-        ) : health ? (
-          <div className="api-status">
-            <h3>✅ API Status: {health.status}</h3>
-            <p>Environment: {health.environment}</p>
-            <p>Timestamp: {new Date(health.timestamp).toLocaleString()}</p>
-          </div>
-        ) : (
-          <div className="api-status">
-            <h3>❌ API Connection Failed</h3>
-            <p>Make sure the backend server is running on port 3001</p>
-          </div>
-        )}
-        
-        <div className="features">
-          <h3>🚀 Features</h3>
-          <ul>
-            <li>React 18 with Vite</li>
-            <li>Hot module replacement</li>
-            <li>API integration</li>
-            <li>Environment: '$ENVIRONMENT'</li>
-          </ul>
-        </div>
-      </header>
-    </div>
-  )
-}
-
-export default App
-EOF
-
-            # CSS files
-            cat > frontend/src/App.css << 'EOF'
-.App {
-  text-align: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.App-header {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
-
-.App-header h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.App-header p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  opacity: 0.9;
-}
-
-.api-status {
-  background: rgba(255,255,255,0.1);
-  padding: 1.5rem;
-  border-radius: 10px;
-  margin: 1rem 0;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.api-status h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
-
-.features {
-  margin-top: 2rem;
-  background: rgba(255,255,255,0.1);
-  padding: 1.5rem;
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.features h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
-
-.features ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.features li {
-  padding: 0.5rem 0;
-  font-size: 1.1rem;
-}
-EOF
-
-            cat > frontend/src/index.css << 'EOF'
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-EOF
-
-            # Vite config
-            cat > frontend/vite.config.js << 'EOF'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
-  },
-})
-EOF
-
-            # HTML template
-            cat > frontend/index.html << 'EOF'
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>'$PROJECT_NAME'</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
-EOF
-
-            # Frontend package.json
-            cat > frontend/package.json << 'EOF'
-{
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
-    "@vitejs/plugin-react": "^4.2.1",
-    "eslint": "^8.55.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.5",
-    "vite": "^5.0.8"
+  "files.associations": {
+    "*.ts": "typescript",
+    "*.tsx": "typescriptreact"
   }
 }
 EOF
-            ;;
-    esac
-    
-    log_success "Frontend starter files created successfully!"
+
+    # Create VS Code extensions recommendations
+    cat > .vscode/extensions.json << 'EOF'
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-json",
+    "yzhang.markdown-all-in-one",
+    "ms-vscode.vscode-git-graph",
+    "eamodio.gitlens",
+    "ms-vscode.vscode-docker",
+    "ms-azuretools.vscode-docker"
+  ]
+}
+EOF
+
+    log_success "Enforcement tools setup completed!"
 }
 
 # Parse command line arguments
@@ -1890,6 +1842,9 @@ main() {
     
     # Create CI/CD workflows
     create_cicd_workflows
+    
+    # Create Husky hooks and enforcement setup
+    create_enforcement_setup
     
     # Show final summary
     create_final_summary
