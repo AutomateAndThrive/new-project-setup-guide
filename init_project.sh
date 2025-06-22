@@ -3,19 +3,24 @@
 # Comprehensive Project Initialization Script
 #
 # Description:
-#   This script automates the complete setup of the POD System B monorepo.
+#   This script automates the complete setup of a new monorepo project.
 #   It creates the entire directory structure, initializes Git with the correct
 #   branching strategy, and creates placeholder configuration and source files.
 #
 # Usage:
-#   1. Save this file as `init_project.sh`.
-#   2. Give it execute permissions: `chmod +x init_project.sh`
-#   3. Run the script: `./init_project.sh`
+#   Basic usage: ./init_project.sh
+#   Custom usage: ./init_project.sh --name "my-project" --frontend "react" --backend "node"
+#
+# Options:
+#   --name, -n          Project name (default: "my-project")
+#   --description, -d   Project description
+#   --frontend, -f      Frontend framework (react, vue, angular, nextjs)
+#   --backend, -b       Backend framework (node, python, dotnet, java)
+#   --database, -db     Database (postgresql, mysql, mongodb, sqlite)
+#   --deployment, -dep  Deployment (docker, kubernetes, serverless)
+#   --interactive, -i   Interactive mode for guided setup
+#   --help, -h          Show this help message
 # ==============================================================================
-
-# Pixel to Profit - Project Initialization Script
-# This script sets up the development environment for the Pixel to Profit MVP
-# A web application that automates print-on-demand listing creation
 
 set -e
 
@@ -24,26 +29,193 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Project configuration
-PROJECT_NAME="pixel-to-profit"
-PROJECT_DESCRIPTION="AI-powered print-on-demand listing automation tool"
+# Default configuration
+PROJECT_NAME="my-project"
+PROJECT_DESCRIPTION="A modern web application"
 FRONTEND_FRAMEWORK="react"
 BACKEND_FRAMEWORK="node"
 DATABASE="postgresql"
-AI_PROVIDER="google-gemini"
-API_INTEGRATION="printify"
+DEPLOYMENT="docker"
+INTERACTIVE_MODE=false
 
-echo -e "${BLUE}🚀 Initializing Pixel to Profit Project${NC}"
+# Function to show help
+show_help() {
+    echo -e "${BLUE}Project Initialization Script${NC}"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --name, -n          Project name (default: my-project)"
+    echo "  --description, -d   Project description"
+    echo "  --frontend, -f      Frontend framework (react, vue, angular, nextjs)"
+    echo "  --backend, -b       Backend framework (node, python, dotnet, java)"
+    echo "  --database, -db     Database (postgresql, mysql, mongodb, sqlite)"
+    echo "  --deployment, -dep  Deployment (docker, kubernetes, serverless)"
+    echo "  --interactive, -i   Interactive mode for guided setup"
+    echo "  --help, -h          Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                                    # Use defaults"
+    echo "  $0 --name my-app --frontend vue      # Custom project"
+    echo "  $0 --interactive                     # Guided setup"
+    echo ""
+}
+
+# Function to validate tech stack choices
+validate_choice() {
+    local value="$1"
+    local valid_options="$2"
+    local option_name="$3"
+    
+    if [[ ! " $valid_options " =~ " $value " ]]; then
+        echo -e "${RED}❌ Invalid $option_name: '$value'${NC}"
+        echo -e "${YELLOW}Valid options: $valid_options${NC}"
+        exit 1
+    fi
+}
+
+# Function for interactive setup
+interactive_setup() {
+    echo -e "${CYAN}🎯 Interactive Project Setup${NC}"
+    echo -e "${CYAN}==========================${NC}"
+    echo ""
+    
+    # Project name
+    read -p "Project name [my-project]: " input_name
+    PROJECT_NAME=${input_name:-"my-project"}
+    
+    # Project description
+    read -p "Project description [A modern web application]: " input_desc
+    PROJECT_DESCRIPTION=${input_desc:-"A modern web application"}
+    
+    # Frontend framework
+    echo -e "${YELLOW}Frontend frameworks:${NC}"
+    echo "1) React (recommended)"
+    echo "2) Vue"
+    echo "3) Angular"
+    echo "4) Next.js"
+    read -p "Choose frontend framework [1]: " frontend_choice
+    case ${frontend_choice:-1} in
+        1) FRONTEND_FRAMEWORK="react" ;;
+        2) FRONTEND_FRAMEWORK="vue" ;;
+        3) FRONTEND_FRAMEWORK="angular" ;;
+        4) FRONTEND_FRAMEWORK="nextjs" ;;
+        *) FRONTEND_FRAMEWORK="react" ;;
+    esac
+    
+    # Backend framework
+    echo -e "${YELLOW}Backend frameworks:${NC}"
+    echo "1) Node.js (recommended)"
+    echo "2) Python/FastAPI"
+    echo "3) .NET"
+    echo "4) Java/Spring"
+    read -p "Choose backend framework [1]: " backend_choice
+    case ${backend_choice:-1} in
+        1) BACKEND_FRAMEWORK="node" ;;
+        2) BACKEND_FRAMEWORK="python" ;;
+        3) BACKEND_FRAMEWORK="dotnet" ;;
+        4) BACKEND_FRAMEWORK="java" ;;
+        *) BACKEND_FRAMEWORK="node" ;;
+    esac
+    
+    # Database
+    echo -e "${YELLOW}Databases:${NC}"
+    echo "1) PostgreSQL (recommended)"
+    echo "2) MySQL"
+    echo "3) MongoDB"
+    echo "4) SQLite"
+    read -p "Choose database [1]: " db_choice
+    case ${db_choice:-1} in
+        1) DATABASE="postgresql" ;;
+        2) DATABASE="mysql" ;;
+        3) DATABASE="mongodb" ;;
+        4) DATABASE="sqlite" ;;
+        *) DATABASE="postgresql" ;;
+    esac
+    
+    # Deployment
+    echo -e "${YELLOW}Deployment options:${NC}"
+    echo "1) Docker (recommended)"
+    echo "2) Kubernetes"
+    echo "3) Serverless"
+    read -p "Choose deployment [1]: " dep_choice
+    case ${dep_choice:-1} in
+        1) DEPLOYMENT="docker" ;;
+        2) DEPLOYMENT="kubernetes" ;;
+        3) DEPLOYMENT="serverless" ;;
+        *) DEPLOYMENT="docker" ;;
+    esac
+    
+    echo ""
+    echo -e "${GREEN}✅ Configuration complete!${NC}"
+    echo ""
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --name|-n)
+            PROJECT_NAME="$2"
+            shift 2
+            ;;
+        --description|-d)
+            PROJECT_DESCRIPTION="$2"
+            shift 2
+            ;;
+        --frontend|-f)
+            FRONTEND_FRAMEWORK="$2"
+            validate_choice "$FRONTEND_FRAMEWORK" "react vue angular nextjs" "frontend framework"
+            shift 2
+            ;;
+        --backend|-b)
+            BACKEND_FRAMEWORK="$2"
+            validate_choice "$BACKEND_FRAMEWORK" "node python dotnet java" "backend framework"
+            shift 2
+            ;;
+        --database|-db)
+            DATABASE="$2"
+            validate_choice "$DATABASE" "postgresql mysql mongodb sqlite" "database"
+            shift 2
+            ;;
+        --deployment|-dep)
+            DEPLOYMENT="$2"
+            validate_choice "$DEPLOYMENT" "docker kubernetes serverless" "deployment"
+            shift 2
+            ;;
+        --interactive|-i)
+            INTERACTIVE_MODE=true
+            shift
+            ;;
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}❌ Unknown option: $1${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Run interactive setup if requested
+if [ "$INTERACTIVE_MODE" = true ]; then
+    interactive_setup
+fi
+
+# Display configuration
+echo -e "${BLUE}🚀 Initializing Project: $PROJECT_NAME${NC}"
 echo -e "${BLUE}=====================================${NC}"
 echo -e "${YELLOW}Project:${NC} $PROJECT_NAME"
 echo -e "${YELLOW}Description:${NC} $PROJECT_DESCRIPTION"
 echo -e "${YELLOW}Frontend:${NC} $FRONTEND_FRAMEWORK"
 echo -e "${YELLOW}Backend:${NC} $BACKEND_FRAMEWORK"
 echo -e "${YELLOW}Database:${NC} $DATABASE"
-echo -e "${YELLOW}AI Provider:${NC} $AI_PROVIDER"
-echo -e "${YELLOW}API Integration:${NC} $API_INTEGRATION"
+echo -e "${YELLOW}Deployment:${NC} $DEPLOYMENT"
 echo ""
 
 # Check if project directory already exists
@@ -61,34 +233,88 @@ cd "$PROJECT_NAME"
 # Create main project structure
 mkdir -p {frontend,backend,docs,scripts,tests,assets}
 
-# Frontend structure (React)
-mkdir -p frontend/{src/{components,pages,hooks,utils,services,types,assets},public}
-mkdir -p frontend/src/components/{ui,layout,forms,upload,preview,dashboard}
-mkdir -p frontend/src/pages/{home,upload,editor,preview,export}
-mkdir -p frontend/src/services/{api,gemini,printify,image-processing}
-mkdir -p frontend/src/types/{api,gemini,printify,ui}
+# Create frontend structure based on framework
+echo -e "${BLUE}📁 Creating frontend structure for $FRONTEND_FRAMEWORK...${NC}"
+case $FRONTEND_FRAMEWORK in
+    "react")
+        mkdir -p frontend/{src/{components,pages,hooks,utils,services,types,assets},public}
+        mkdir -p frontend/src/components/{ui,layout,forms}
+        mkdir -p frontend/src/pages/{home,about,contact}
+        mkdir -p frontend/src/services/{api,auth}
+        mkdir -p frontend/src/types/{api,ui}
+        ;;
+    "vue")
+        mkdir -p frontend/{src/{components,views,composables,utils,services,types,assets},public}
+        mkdir -p frontend/src/components/{ui,layout,forms}
+        mkdir -p frontend/src/views/{home,about,contact}
+        mkdir -p frontend/src/services/{api,auth}
+        mkdir -p frontend/src/types/{api,ui}
+        ;;
+    "angular")
+        mkdir -p frontend/{src/{app/{components,pages,services,models,guards},assets,environments},public}
+        mkdir -p frontend/src/app/components/{ui,layout,forms}
+        mkdir -p frontend/src/app/pages/{home,about,contact}
+        mkdir -p frontend/src/app/services/{api,auth}
+        mkdir -p frontend/src/app/models/{api,ui}
+        ;;
+    "nextjs")
+        mkdir -p frontend/{src/{app,components,lib,types,styles},public}
+        mkdir -p frontend/src/components/{ui,layout,forms}
+        mkdir -p frontend/src/lib/{api,auth}
+        mkdir -p frontend/src/types/{api,ui}
+        ;;
+esac
 
-# Backend structure (Node.js/Express)
-mkdir -p backend/{src/{controllers,middleware,models,routes,services,utils,config},tests}
-mkdir -p backend/src/services/{gemini,printify,image-processing,cache}
-mkdir -p backend/src/models/{product,design,user}
-mkdir -p backend/src/controllers/{design,content,product,export}
+# Create backend structure based on framework
+echo -e "${BLUE}📁 Creating backend structure for $BACKEND_FRAMEWORK...${NC}"
+case $BACKEND_FRAMEWORK in
+    "node")
+        mkdir -p backend/{src/{controllers,middleware,models,routes,services,utils,config},tests}
+        mkdir -p backend/src/services/{api,auth,database}
+        mkdir -p backend/src/models/{user,product}
+        mkdir -p backend/src/controllers/{auth,user,product}
+        mkdir -p backend/{migrations,seeds}
+        ;;
+    "python")
+        mkdir -p backend/{app/{api,core,models,schemas,services,utils},tests}
+        mkdir -p backend/app/api/{endpoints,dependencies}
+        mkdir -p backend/app/core/{config,security}
+        mkdir -p backend/app/models
+        mkdir -p backend/app/schemas
+        mkdir -p backend/app/services/{api,auth,database}
+        ;;
+    "dotnet")
+        mkdir -p backend/{Controllers,Models,Services,Data,Configuration}
+        mkdir -p backend/Controllers
+        mkdir -p backend/Models
+        mkdir -p backend/Services
+        mkdir -p backend/Data
+        mkdir -p backend/Configuration
+        ;;
+    "java")
+        mkdir -p backend/src/main/java/{controllers,models,services,repositories,config}
+        mkdir -p backend/src/main/resources
+        mkdir -p backend/src/test/java
+        mkdir -p backend/src/main/java/controllers
+        mkdir -p backend/src/main/java/models
+        mkdir -p backend/src/main/java/services
+        mkdir -p backend/src/main/java/repositories
+        mkdir -p backend/src/main/java/config
+        ;;
+esac
 
-# Database structure
-mkdir -p backend/{migrations,seeds}
-
-# Documentation structure
+# Create documentation structure
 mkdir -p docs/{api,deployment,development,user-guide}
 
 # Create essential files
 echo -e "${BLUE}📝 Creating configuration files...${NC}"
 
 # Root level files
-cat > package.json << 'EOF'
+cat > package.json << EOF
 {
-  "name": "pixel-to-profit",
+  "name": "$PROJECT_NAME",
   "version": "1.0.0",
-  "description": "AI-powered print-on-demand listing automation tool",
+  "description": "$PROJECT_DESCRIPTION",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
@@ -104,7 +330,7 @@ cat > package.json << 'EOF'
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && npm run lint"
   },
-  "keywords": ["print-on-demand", "etsy", "printify", "ai", "automation"],
+  "keywords": ["web-app", "monorepo", "$FRONTEND_FRAMEWORK", "$BACKEND_FRAMEWORK"],
   "author": "Your Team",
   "license": "MIT",
   "devDependencies": {
@@ -113,36 +339,25 @@ cat > package.json << 'EOF'
 }
 EOF
 
-# Frontend package.json
-cat > frontend/package.json << 'EOF'
+# Create frontend package.json based on framework
+echo -e "${BLUE}📝 Creating frontend configuration for $FRONTEND_FRAMEWORK...${NC}"
+case $FRONTEND_FRAMEWORK in
+    "react")
+        cat > frontend/package.json << 'EOF'
 {
-  "name": "pixel-to-profit-frontend",
+  "name": "frontend",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",
-    "react-dropzone": "^14.2.3",
     "axios": "^1.6.2",
-    "react-query": "^3.39.3",
-    "zustand": "^4.4.7",
-    "tailwindcss": "^3.3.6",
-    "@headlessui/react": "^1.7.17",
-    "@heroicons/react": "^2.0.18",
-    "react-hot-toast": "^2.4.1",
-    "framer-motion": "^10.16.16",
-    "react-color": "^2.19.3",
-    "html2canvas": "^1.4.1"
+    "tailwindcss": "^3.3.6"
   },
   "devDependencies": {
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
-    "eslint": "^8.55.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
     "@vitejs/plugin-react": "^4.2.1"
@@ -152,60 +367,183 @@ cat > frontend/package.json << 'EOF'
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix"
+    "lint": "eslint src --ext .ts,.tsx"
   }
 }
 EOF
-
-# Backend package.json
-cat > backend/package.json << 'EOF'
+        ;;
+    "vue")
+        cat > frontend/package.json << 'EOF'
 {
-  "name": "pixel-to-profit-backend",
+  "name": "frontend",
   "version": "1.0.0",
-  "description": "Backend API for Pixel to Profit",
+  "private": true,
+  "dependencies": {
+    "vue": "^3.3.0",
+    "vue-router": "^4.2.0",
+    "axios": "^1.6.2",
+    "tailwindcss": "^3.3.6"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "lint": "eslint src --ext .vue,.ts"
+  }
+}
+EOF
+        ;;
+    "angular")
+        cat > frontend/package.json << 'EOF'
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@angular/core": "^17.0.0",
+    "@angular/common": "^17.0.0",
+    "@angular/router": "^17.0.0",
+    "@angular/platform-browser": "^17.0.0"
+  },
+  "devDependencies": {
+    "@angular/cli": "^17.0.0",
+    "@angular/compiler-cli": "^17.0.0",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint"
+  }
+}
+EOF
+        ;;
+    "nextjs")
+        cat > frontend/package.json << 'EOF'
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "axios": "^1.6.2",
+    "tailwindcss": "^3.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "start": "next dev",
+    "build": "next build",
+    "test": "jest",
+    "lint": "next lint"
+  }
+}
+EOF
+        ;;
+esac
+
+# Create backend package.json based on framework
+echo -e "${BLUE}📝 Creating backend configuration for $BACKEND_FRAMEWORK...${NC}"
+case $BACKEND_FRAMEWORK in
+    "node")
+        cat > backend/package.json << 'EOF'
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend API",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "db:setup": "node scripts/setup-database.js",
-    "db:migrate": "node scripts/migrate.js",
-    "db:seed": "node scripts/seed.js"
+    "db:setup": "node scripts/setup-database.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
     "dotenv": "^16.3.1",
-    "multer": "^1.4.5-lts.1",
-    "sharp": "^0.33.1",
-    "axios": "^1.6.2",
-    "pg": "^8.11.3",
-    "sequelize": "^6.35.2",
-    "redis": "^4.6.11",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
-    "joi": "^17.11.0",
-    "compression": "^1.7.4",
-    "rate-limiter-flexible": "^3.0.8",
-    "@google/generative-ai": "^0.2.1"
+    "axios": "^1.6.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
     "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "eslint": "^8.55.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.29.0"
+    "eslint": "^8.55.0"
   }
 }
 EOF
+        ;;
+    "python")
+        cat > backend/requirements.txt << 'EOF'
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+pydantic==2.5.0
+python-dotenv==1.0.0
+requests==2.31.0
+pytest==7.4.3
+black==23.11.0
+flake8==6.1.0
+EOF
+        ;;
+    "dotnet")
+        cat > backend/backend.csproj << 'EOF'
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+</Project>
+EOF
+        ;;
+    "java")
+        cat > backend/pom.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+    </parent>
+    <groupId>com.example</groupId>
+    <artifactId>backend</artifactId>
+    <version>1.0.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+</project>
+EOF
+        ;;
+esac
 
 # Environment configuration
-cat > backend/.env.example << 'EOF'
+cat > backend/.env.example << EOF
 # Server Configuration
 PORT=3001
 NODE_ENV=development
@@ -213,45 +551,24 @@ NODE_ENV=development
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=pixel_to_profit
+DB_NAME=${PROJECT_NAME//-/_}
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# Redis Configuration
-REDIS_URL=redis://localhost:6379
-
-# Google Gemini API
-GEMINI_API_KEY=your_gemini_api_key
-
-# Printify API
-PRINTIFY_API_KEY=your_printify_api_key
-PRINTIFY_SHOP_ID=your_shop_id
-
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=24h
-
-# File Upload Configuration
-MAX_FILE_SIZE=10485760
-UPLOAD_PATH=./uploads
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-
-# CORS Configuration
+# API Configuration
+API_BASE_URL=http://localhost:3001/api
 CORS_ORIGIN=http://localhost:3000
 EOF
 
 # Frontend environment
-cat > frontend/.env.example << 'EOF'
+cat > frontend/.env.example << EOF
 VITE_API_BASE_URL=http://localhost:3001/api
-VITE_APP_NAME=Pixel to Profit
+VITE_APP_NAME=$PROJECT_NAME
 VITE_APP_VERSION=1.0.0
 EOF
 
 # Docker configuration
-cat > docker-compose.yml << 'EOF'
+cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
@@ -273,20 +590,17 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=development
-      - DB_HOST=postgres
-      - REDIS_URL=redis://redis:6379
+      - DB_HOST=database
     depends_on:
-      - postgres
-      - redis
+      - database
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - ./uploads:/app/uploads
 
-  postgres:
+  database:
     image: postgres:15
     environment:
-      POSTGRES_DB: pixel_to_profit
+      POSTGRES_DB: ${PROJECT_NAME//-/_}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -294,113 +608,51 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
 volumes:
   postgres_data:
-  redis_data:
-EOF
-
-# Frontend Dockerfile
-cat > frontend/Dockerfile << 'EOF'
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-
-EXPOSE 3000
-
-CMD ["npm", "start"]
-EOF
-
-# Backend Dockerfile
-cat > backend/Dockerfile << 'EOF'
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-
-EXPOSE 3001
-
-CMD ["npm", "run", "dev"]
 EOF
 
 # Create README
-cat > README.md << 'EOF'
-# Pixel to Profit
+cat > README.md << EOF
+# $PROJECT_NAME
 
-AI-powered print-on-demand listing automation tool that helps creators generate optimized Etsy listings from their designs.
+$PROJECT_DESCRIPTION
 
 ## 🚀 Quick Start
 
 1. **Install dependencies:**
-   ```bash
+   \`\`\`bash
    npm run install:all
-   ```
+   \`\`\`
 
 2. **Set up environment variables:**
-   ```bash
+   \`\`\`bash
    cp backend/.env.example backend/.env
    cp frontend/.env.example frontend/.env
-   # Edit the .env files with your API keys
-   ```
+   \`\`\`
 
-3. **Set up database:**
-   ```bash
-   npm run setup:db
-   ```
-
-4. **Start development servers:**
-   ```bash
+3. **Start development servers:**
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 ## 🏗️ Project Structure
 
-```
-pixel-to-profit/
-├── frontend/          # React application
-├── backend/           # Node.js API server
+\`\`\`
+$PROJECT_NAME/
+├── frontend/          # $FRONTEND_FRAMEWORK application
+├── backend/           # $BACKEND_FRAMEWORK API server
 ├── docs/             # Documentation
 ├── scripts/          # Utility scripts
 └── tests/            # Test files
-```
-
-## 🔧 Key Features
-
-- **AI-Powered Content Generation**: Uses Google Gemini to analyze designs and generate optimized titles, tags, and descriptions
-- **Printify Integration**: Pulls product data and colors from Printify API
-- **Color Visualizer**: Preview designs on all available product colors
-- **Export Functionality**: Copy optimized content for easy Etsy listing creation
-
-## 📚 Documentation
-
-- [API Documentation](./docs/api/)
-- [Development Guide](./docs/development/)
-- [Deployment Guide](./docs/deployment/)
-- [User Guide](./docs/user-guide/)
+\`\`\`
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React, TypeScript, Tailwind CSS, Vite
-- **Backend**: Node.js, Express, PostgreSQL, Redis
-- **AI**: Google Gemini API
-- **APIs**: Printify API
-- **Image Processing**: Sharp
-- **Testing**: Jest, Vitest
+- **Frontend**: $FRONTEND_FRAMEWORK
+- **Backend**: $BACKEND_FRAMEWORK
+- **Database**: $DATABASE
+- **Deployment**: $DEPLOYMENT
 
 ## 📝 License
 
@@ -408,133 +660,45 @@ MIT
 EOF
 
 # Create development guide
-cat > docs/development/README.md << 'EOF'
+cat > docs/development/README.md << EOF
 # Development Guide
 
 ## Prerequisites
 
 - Node.js 18+
-- PostgreSQL 15+
-- Redis 7+
-- Google Gemini API key
-- Printify API key
+- $DATABASE
+- Docker (optional)
 
 ## Setup Instructions
 
 1. **Clone and install:**
-   ```bash
+   \`\`\`bash
    git clone <repository-url>
-   cd pixel-to-profit
+   cd $PROJECT_NAME
    npm run install:all
-   ```
+   \`\`\`
 
-2. **Database setup:**
-   ```bash
-   # Start PostgreSQL and Redis
-   docker-compose up postgres redis -d
-   
-   # Run database setup
-   npm run setup:db
-   ```
-
-3. **Environment configuration:**
-   - Copy `.env.example` files and configure your API keys
+2. **Environment configuration:**
+   - Copy .env.example files and configure your settings
    - Ensure database connection details are correct
 
-4. **Start development:**
-   ```bash
+3. **Start development:**
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 ## Development Workflow
 
 1. **Frontend**: http://localhost:3000
 2. **Backend API**: http://localhost:3001
 3. **Database**: localhost:5432
-4. **Redis**: localhost:6379
 
 ## Key Development Commands
 
-- `npm run dev` - Start both frontend and backend
-- `npm run test` - Run all tests
-- `npm run lint` - Run linting
-- `npm run build` - Build for production
-EOF
-
-# Create API documentation template
-cat > docs/api/README.md << 'EOF'
-# API Documentation
-
-## Base URL
-`http://localhost:3001/api`
-
-## Authentication
-Most endpoints require a valid API key in the header:
-```
-Authorization: Bearer <your-api-key>
-```
-
-## Endpoints
-
-### Design Upload
-- `POST /designs/upload` - Upload design files
-- `GET /designs/:id` - Get design details
-- `DELETE /designs/:id` - Delete design
-
-### Content Generation
-- `POST /content/generate` - Generate listing content
-- `PUT /content/:id` - Update generated content
-
-### Product Data
-- `GET /products` - Get available products
-- `GET /products/:id/colors` - Get product colors
-
-### Export
-- `POST /export/listing` - Export listing content
-
-## Error Responses
-All errors follow this format:
-```json
-{
-  "error": "Error message",
-  "code": "ERROR_CODE",
-  "timestamp": "2025-01-01T00:00:00Z"
-}
-```
-EOF
-
-# Create deployment guide
-cat > docs/deployment/README.md << 'EOF'
-# Deployment Guide
-
-## Production Deployment
-
-### Prerequisites
-- Docker and Docker Compose
-- PostgreSQL database
-- Redis instance
-- Google Gemini API key
-- Printify API key
-
-### Environment Variables
-Set the following environment variables in production:
-- `NODE_ENV=production`
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- `REDIS_URL`
-- `GEMINI_API_KEY`
-- `PRINTIFY_API_KEY`
-- `JWT_SECRET`
-
-### Deployment Steps
-1. Build and deploy using Docker Compose
-2. Set up reverse proxy (nginx)
-3. Configure SSL certificates
-4. Set up monitoring and logging
-
-## Docker Deployment
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
+- \`npm run dev\` - Start both frontend and backend
+- \`npm run test\` - Run all tests
+- \`npm run lint\` - Run linting
+- \`npm run build\` - Build for production
 EOF
 
 echo -e "${GREEN}✅ Project structure created successfully!${NC}"
@@ -550,14 +714,10 @@ echo -e "${YELLOW}3.${NC} Set up environment variables:"
 echo -e "   ${GREEN}cp backend/.env.example backend/.env${NC}"
 echo -e "   ${GREEN}cp frontend/.env.example frontend/.env${NC}"
 echo ""
-echo -e "${YELLOW}4.${NC} Configure your API keys in the .env files:"
-echo -e "   - Google Gemini API key"
-echo -e "   - Printify API key"
-echo ""
-echo -e "${YELLOW}5.${NC} Start the development servers:"
+echo -e "${YELLOW}4.${NC} Start the development servers:"
 echo -e "   ${GREEN}npm run dev${NC}"
 echo ""
-echo -e "${BLUE}🎉 Your Pixel to Profit project is ready for development!${NC}"
+echo -e "${BLUE}🎉 Your $PROJECT_NAME project is ready for development!${NC}"
 echo ""
 echo -e "${YELLOW}📚 Check the docs/ directory for detailed guides.${NC}"
 
