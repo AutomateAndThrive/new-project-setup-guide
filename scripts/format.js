@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Test comment for pre-commit hook
 // Simple format script that can handle file paths from lint-staged
 // This is a placeholder until we add Prettier
 
