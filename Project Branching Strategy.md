@@ -21,18 +21,20 @@ Our branching strategy follows a **simplified Git Flow** approach, optimized for
 ### Main Branches
 
 #### `main` (Production)
+
 - **Purpose**: Contains production-ready code
 - **Source**: Merged from `develop` branch
-- **Protection**: 
+- **Protection**:
   - Requires pull request reviews
   - Requires status checks to pass
   - No direct pushes allowed
 - **Tagging**: Each merge to main creates a version tag (v1.0.0, v1.1.0, etc.)
 
 #### `develop` (Integration) ⭐ **DEFAULT BRANCH**
+
 - **Purpose**: Integration branch for features and bug fixes
 - **Source**: Merged from `feature/*` and `bugfix/*` branches
-- **Protection**: 
+- **Protection**:
   - Requires pull request reviews
   - Requires tests to pass
   - Requires code coverage > 80%
@@ -41,6 +43,7 @@ Our branching strategy follows a **simplified Git Flow** approach, optimized for
 ### Supporting Branches
 
 #### `feature/*` (Feature Development)
+
 - **Purpose**: Develop new features for the application
 - **Source**: Created from `develop`
 - **Naming**: `feature/TASK-ID-descriptive-name`
@@ -50,6 +53,7 @@ Our branching strategy follows a **simplified Git Flow** approach, optimized for
   - `feature/BACKEND-005-api-integration`
 
 #### `bugfix/*` (Bug Fixes)
+
 - **Purpose**: Fix bugs found in development
 - **Source**: Created from `develop`
 - **Naming**: `bugfix/TASK-ID-description`
@@ -58,6 +62,7 @@ Our branching strategy follows a **simplified Git Flow** approach, optimized for
   - `bugfix/BACKEND-api-timeout`
 
 #### `hotfix/*` (Critical Production Fixes)
+
 - **Purpose**: Fix critical bugs in production
 - **Source**: Created from `main`
 - **Naming**: `hotfix/version-description`
@@ -67,11 +72,11 @@ Our branching strategy follows a **simplified Git Flow** approach, optimized for
 
 ## 📊 Branch Protection Rules
 
-| Branch | Purpose | PR Required? | Approvals | Status Checks | Direct Pushes |
-|--------|---------|--------------|-----------|---------------|---------------|
-| `main` | Production Releases | Yes | 2 | Required | Not Allowed |
-| `develop` | Feature Integration | Yes | 1 | Required | Not Allowed |
-| `hotfix/*` | Production Bugfixes | Yes | 2 | Required | Not Allowed |
+| Branch     | Purpose             | PR Required? | Approvals | Status Checks | Direct Pushes |
+| ---------- | ------------------- | ------------ | --------- | ------------- | ------------- |
+| `main`     | Production Releases | Yes          | 2         | Required      | Not Allowed   |
+| `develop`  | Feature Integration | Yes          | 1         | Required      | Not Allowed   |
+| `hotfix/*` | Production Bugfixes | Yes          | 2         | Required      | Not Allowed   |
 
 ## 🔄 Visual Workflow
 
@@ -103,9 +108,10 @@ gitGraph
 ### Feature Development Workflow
 
 1. **Start Feature Development**
+
    ```bash
    # Ensure develop is up to date
-   git checkout develop  
+   git checkout develop
    git pull origin develop
 
    # Create feature branch
@@ -113,16 +119,18 @@ gitGraph
    ```
 
 2. **Develop and Commit**
+
    ```bash
    # Make your changes
    git add .
    git commit -m "feat(AI): implement design analysis with Gemini API"
-   
+
    # Push to remote
    git push origin feature/AI-001-design-analysis
    ```
 
 3. **Create Pull Request**
+
    - Create PR from `feature/AI-001-design-analysis` to `develop`
    - Add appropriate labels and assignees
    - Request code review
@@ -137,6 +145,7 @@ gitGraph
 ### Bug Fix Workflow
 
 1. **Create Bug Fix Branch**
+
    ```bash
    git checkout develop
    git pull origin develop
@@ -144,11 +153,12 @@ gitGraph
    ```
 
 2. **Fix and Test**
+
    ```bash
    # Make fixes
    git add .
    git commit -m "fix(frontend): validate file types before upload"
-   
+
    # Push and create PR
    git push origin bugfix/FRONTEND-upload-validation
    ```
@@ -161,11 +171,12 @@ gitGraph
 ### Release Workflow
 
 1. **Prepare Release**
+
    ```bash
    # Ensure develop is stable
    git checkout develop
    git pull origin develop
-   
+
    # Create release commit
    git commit -m "chore: prepare release v1.1.0"
    git push origin develop
@@ -193,9 +204,10 @@ gitGraph
 - [ ] Push the tag to the remote (`git push origin --tags`)
 - [ ] Immediately create a second Pull Request from the hotfix branch targeting develop
 - [ ] Merge the second PR into develop to ensure the fix is not lost in the next release
-- [ ] Delete the hotfix/* branch
+- [ ] Delete the hotfix/\* branch
 
 #### Hotfix Example
+
 ```bash
 # 1. Create hotfix branch from main
 git checkout main
@@ -229,6 +241,7 @@ git push origin --delete hotfix/v1.0.1-security-fix
 We follow the **Conventional Commits** specification for consistent commit messages:
 
 ### Format
+
 ```
 <type>[optional scope]: <description>
 
@@ -238,6 +251,7 @@ We follow the **Conventional Commits** specification for consistent commit messa
 ```
 
 ### Types
+
 - **feat**: A new feature
 - **fix**: A bug fix
 - **docs**: Documentation only changes
@@ -248,6 +262,7 @@ We follow the **Conventional Commits** specification for consistent commit messa
 - **chore**: Changes to the build process or auxiliary tools
 
 ### Examples
+
 ```bash
 git commit -m "feat(AI): implement design analysis with Gemini API"
 git commit -m "fix(frontend): resolve upload validation issue"
@@ -257,6 +272,7 @@ git commit -m "chore: update dependencies"
 ```
 
 ### Tools for Conventional Commits
+
 - **Commitizen**: Interactive commit message creation
 - **Commitlint**: Validate commit messages
 - **Husky**: Pre-commit hooks for enforcement
@@ -264,6 +280,7 @@ git commit -m "chore: update dependencies"
 ## 🔧 Automated Quality Gates
 
 ### Pre-commit Hooks
+
 - **ESLint**: Code linting and style checking
 - **Prettier**: Code formatting
 - **TypeScript**: Type checking
@@ -271,6 +288,7 @@ git commit -m "chore: update dependencies"
 - **Commitlint**: Validate commit messages
 
 ### Pull Request Requirements
+
 - **Code Review**: At least one approval required
 - **Status Checks**: All CI/CD checks must pass
 - **Code Coverage**: Minimum 80% coverage required
@@ -281,22 +299,27 @@ git commit -m "chore: update dependencies"
 ### Common Issues
 
 #### "Branch protection rules prevent pushing"
+
 - **Solution**: Create a pull request instead of direct push
 - **Prevention**: Always use feature branches and PRs
 
 #### "Tests failing in CI but passing locally"
+
 - **Solution**: Run `npm run test:ci` locally to match CI environment
 - **Prevention**: Use Docker for consistent development environment
 
 #### "Merge conflicts in develop"
+
 - **Solution**: Rebase your feature branch on latest develop
 - **Prevention**: Keep feature branches short-lived and up-to-date
 
 #### "Forgot to merge hotfix to develop"
+
 - **Solution**: Cherry-pick the hotfix commit to develop
 - **Prevention**: Follow the hotfix checklist exactly
 
 ### Debugging Failed CI/CD Checks
+
 See the [CI/CD Guide](docs/development/CI_CD_Guide.md) for detailed debugging information.
 
 ## 📚 Additional Resources
@@ -307,7 +330,7 @@ See the [CI/CD Guide](docs/development/CI_CD_Guide.md) for detailed debugging in
 
 ---
 
-*This branching strategy is designed for modern software projects and may be updated as the project evolves.*
+_This branching strategy is designed for modern software projects and may be updated as the project evolves._
 
-*Last updated: January 2025*
-*Version: 1.0.0*
+_Last updated: January 2025_
+_Version: 1.0.0_

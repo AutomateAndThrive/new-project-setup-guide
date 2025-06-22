@@ -7,7 +7,8 @@
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "eslint . --ext .js,.jsx",
     "lint:fix": "eslint . --ext .js,.jsx --fix",
-    "format": "node scripts/format.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },
@@ -28,7 +29,8 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-node": "^11.1.0"
+    "eslint-plugin-node": "^11.1.0",
+    "prettier": "^3.2.5"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -44,6 +46,8 @@
     ]
   },
   "commitlint": {
-    "extends": ["@commitlint/config-conventional"]
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   }
-} 
+}

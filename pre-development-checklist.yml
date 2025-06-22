@@ -15,18 +15,18 @@
 # ==============================================================================
 
 project:
-  name: "Your Project Name"
-  description: "Your project description from PRD"
-  version: "1.0.0"
-  status: "Foundation Complete - Ready for Development"
+  name: 'Your Project Name'
+  description: 'Your project description from PRD'
+  version: '1.0.0'
+  status: 'Foundation Complete - Ready for Development'
 
 phases:
-  - name: "Foundation Review & Setup"
-    status: "ready-to-start"
-    priority: "critical"
+  - name: 'Foundation Review & Setup'
+    status: 'ready-to-start'
+    priority: 'critical'
     tasks:
-      - id: "FOUNDATION-001"
-        title: "Review generated project structure"
+      - id: 'FOUNDATION-001'
+        title: 'Review generated project structure'
         description: |
           Explore the generated files and understand the structure:
           - Review backend/src/ structure (controllers, routes, models, services)
@@ -34,13 +34,13 @@ phases:
           - Understand the database migration system
           - Review CI/CD workflows in .github/workflows/
           - Familiarize yourself with the development scripts
-        status: "pending"
-        assignee: "lead-developer"
+        status: 'pending'
+        assignee: 'lead-developer'
         estimated_hours: 2
         dependencies: []
-        
-      - id: "FOUNDATION-002"
-        title: "Customize environment variables"
+
+      - id: 'FOUNDATION-002'
+        title: 'Customize environment variables'
         description: |
           Update environment files for your specific setup:
           - Copy backend/.env.development to backend/.env
@@ -48,13 +48,13 @@ phases:
           - Configure any API keys or external service credentials
           - Update frontend environment variables if applicable
           - Verify all environment variables are properly set
-        status: "pending"
-        assignee: "developer"
+        status: 'pending'
+        assignee: 'developer'
         estimated_hours: 1
-        dependencies: ["FOUNDATION-001"]
-        
-      - id: "FOUNDATION-003"
-        title: "Set up and test database"
+        dependencies: ['FOUNDATION-001']
+
+      - id: 'FOUNDATION-003'
+        title: 'Set up and test database'
         description: |
           Initialize your database and verify the foundation:
           - Run initial migrations: cd backend && ./scripts/migrate.sh
@@ -62,17 +62,17 @@ phases:
           - Test the development environment: ./scripts/start-development.sh local
           - Verify both frontend and backend are running correctly
           - Test basic API endpoints (health check, etc.)
-        status: "pending"
-        assignee: "developer"
+        status: 'pending'
+        assignee: 'developer'
         estimated_hours: 2
-        dependencies: ["FOUNDATION-002"]
+        dependencies: ['FOUNDATION-002']
 
-  - name: "Domain Planning & Database Design"
-    status: "pending"
-    priority: "high"
+  - name: 'Domain Planning & Database Design'
+    status: 'pending'
+    priority: 'high'
     tasks:
-      - id: "DOMAIN-001"
-        title: "Define core domain entities"
+      - id: 'DOMAIN-001'
+        title: 'Define core domain entities'
         description: |
           Based on your PRD, identify and document your main entities:
           - List all core business entities (users, products, orders, etc.)
@@ -80,13 +80,13 @@ phases:
           - Document business rules and constraints
           - Create entity relationship diagram
           - Validate with stakeholders if needed
-        status: "pending"
-        assignee: "lead-developer"
+        status: 'pending'
+        assignee: 'lead-developer'
         estimated_hours: 4
-        dependencies: ["FOUNDATION-003"]
-        
-      - id: "DOMAIN-002"
-        title: "Design database schema"
+        dependencies: ['FOUNDATION-003']
+
+      - id: 'DOMAIN-002'
+        title: 'Design database schema'
         description: |
           Create database schema for your domain entities:
           - Design tables for each core entity
@@ -94,13 +94,13 @@ phases:
           - Plan for data types and constraints
           - Consider performance and scalability requirements
           - Document the schema design
-        status: "pending"
-        assignee: "backend-developer"
+        status: 'pending'
+        assignee: 'backend-developer'
         estimated_hours: 6
-        dependencies: ["DOMAIN-001"]
-        
-      - id: "DOMAIN-003"
-        title: "Create database migrations"
+        dependencies: ['DOMAIN-001']
+
+      - id: 'DOMAIN-003'
+        title: 'Create database migrations'
         description: |
           Implement the database schema:
           - Create migration files for each entity
@@ -108,17 +108,17 @@ phases:
           - Include seed data for development
           - Test migrations in development environment
           - Verify data integrity and relationships
-        status: "pending"
-        assignee: "backend-developer"
+        status: 'pending'
+        assignee: 'backend-developer'
         estimated_hours: 8
-        dependencies: ["DOMAIN-002"]
+        dependencies: ['DOMAIN-002']
 
-  - name: "Development Environment Setup"
-    status: "pending"
-    priority: "high"
+  - name: 'Development Environment Setup'
+    status: 'pending'
+    priority: 'high'
     tasks:
-      - id: "ENV-001"
-        title: "Configure development tools"
+      - id: 'ENV-001'
+        title: 'Configure development tools'
         description: |
           Set up development environment and tools:
           - Configure IDE/editor settings and extensions
@@ -126,13 +126,13 @@ phases:
           - Configure debugging tools for both frontend and backend
           - Set up Git hooks for pre-commit checks
           - Verify all development scripts work correctly
-        status: "pending"
-        assignee: "developer"
+        status: 'pending'
+        assignee: 'developer'
         estimated_hours: 3
-        dependencies: ["FOUNDATION-003"]
-        
-      - id: "ENV-002"
-        title: "Set up testing infrastructure"
+        dependencies: ['FOUNDATION-003']
+
+      - id: 'ENV-002'
+        title: 'Set up testing infrastructure'
         description: |
           Prepare testing environment:
           - Configure Jest for backend testing
@@ -140,17 +140,17 @@ phases:
           - Create test database configuration
           - Add testing scripts to package.json
           - Verify test runners work correctly
-        status: "pending"
-        assignee: "developer"
+        status: 'pending'
+        assignee: 'developer'
         estimated_hours: 2
-        dependencies: ["ENV-001"]
+        dependencies: ['ENV-001']
 
-  - name: "Project Configuration"
-    status: "pending"
-    priority: "medium"
+  - name: 'Project Configuration'
+    status: 'pending'
+    priority: 'medium'
     tasks:
-      - id: "CONFIG-001"
-        title: "Update project metadata"
+      - id: 'CONFIG-001'
+        title: 'Update project metadata'
         description: |
           Customize project information:
           - Update package.json with project name and description
@@ -158,13 +158,13 @@ phases:
           - Configure repository settings and branch protection
           - Set up project labels and milestones
           - Update license if needed
-        status: "pending"
-        assignee: "lead-developer"
+        status: 'pending'
+        assignee: 'lead-developer'
         estimated_hours: 2
-        dependencies: ["FOUNDATION-001"]
-        
-      - id: "CONFIG-002"
-        title: "Configure external services"
+        dependencies: ['FOUNDATION-001']
+
+      - id: 'CONFIG-002'
+        title: 'Configure external services'
         description: |
           Set up any required external services:
           - Configure monitoring and logging services
@@ -172,17 +172,17 @@ phases:
           - Configure analytics if needed
           - Set up backup and storage services
           - Verify all external integrations work
-        status: "pending"
-        assignee: "devops-engineer"
+        status: 'pending'
+        assignee: 'devops-engineer'
         estimated_hours: 4
-        dependencies: ["CONFIG-001"]
+        dependencies: ['CONFIG-001']
 
-  - name: "Team Setup & Documentation"
-    status: "pending"
-    priority: "medium"
+  - name: 'Team Setup & Documentation'
+    status: 'pending'
+    priority: 'medium'
     tasks:
-      - id: "TEAM-001"
-        title: "Create development guidelines"
+      - id: 'TEAM-001'
+        title: 'Create development guidelines'
         description: |
           Establish development standards:
           - Document coding standards and conventions
@@ -190,13 +190,13 @@ phases:
           - Define code review process
           - Document testing requirements
           - Create deployment procedures
-        status: "pending"
-        assignee: "lead-developer"
+        status: 'pending'
+        assignee: 'lead-developer'
         estimated_hours: 4
-        dependencies: ["CONFIG-001"]
-        
-      - id: "TEAM-002"
-        title: "Set up project management"
+        dependencies: ['CONFIG-001']
+
+      - id: 'TEAM-002'
+        title: 'Set up project management'
         description: |
           Configure project management tools:
           - Set up issue templates and workflows
@@ -204,42 +204,42 @@ phases:
           - Create development sprint planning
           - Set up team communication channels
           - Document team roles and responsibilities
-        status: "pending"
-        assignee: "project-manager"
+        status: 'pending'
+        assignee: 'project-manager'
         estimated_hours: 3
-        dependencies: ["TEAM-001"]
+        dependencies: ['TEAM-001']
 
 success_metrics:
   setup_completion:
-    - metric: "Environment Setup Time"
-      target: "Complete all setup within 1-2 days"
-      current: "TBD"
-      
+    - metric: 'Environment Setup Time'
+      target: 'Complete all setup within 1-2 days'
+      current: 'TBD'
+
   readiness:
-    - metric: "Development Readiness"
-      target: "100% of team can run and test the application"
-      current: "TBD"
-      
+    - metric: 'Development Readiness'
+      target: '100% of team can run and test the application'
+      current: 'TBD'
+
   quality:
-    - metric: "Setup Quality"
-      target: "Zero critical setup issues"
-      current: "TBD"
+    - metric: 'Setup Quality'
+      target: 'Zero critical setup issues'
+      current: 'TBD'
 
 dependencies:
   external:
-    - name: "Database (PostgreSQL/MySQL/MongoDB)"
-      status: "required"
+    - name: 'Database (PostgreSQL/MySQL/MongoDB)'
+      status: 'required'
       setup_required: true
-    - name: "Development Tools"
-      status: "required"
+    - name: 'Development Tools'
+      status: 'required'
       setup_required: true
-    - name: "External Services"
-      status: "project-dependent"
+    - name: 'External Services'
+      status: 'project-dependent'
       setup_required: false
 
 notes:
-  - "This checklist covers only pre-development setup tasks"
-  - "Once completed, the team is ready to begin feature development"
-  - "Add project-specific setup requirements based on your PRD"
-  - "Consider team size and experience when estimating hours"
-  - "All tasks should be completed before starting business logic development"
+  - 'This checklist covers only pre-development setup tasks'
+  - 'Once completed, the team is ready to begin feature development'
+  - 'Add project-specific setup requirements based on your PRD'
+  - 'Consider team size and experience when estimating hours'
+  - 'All tasks should be completed before starting business logic development'

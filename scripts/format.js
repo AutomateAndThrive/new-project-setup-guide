@@ -12,4 +12,4 @@ if (files.length > 0) {
 }
 
 // eslint-disable-next-line no-process-exit
-process.exit(0); 
+process.exit(0);
