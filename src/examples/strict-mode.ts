@@ -111,3 +111,7 @@ export const handleApiResponse = <T>(
     return null;
   }
 };
+
+// ✅ GOOD: Simple, type-safe functions for Vitest sample
+export const strictSum = (a: number, b: number): number => a + b;
+export const strictGreet = (name: string): string => `Hello, ${name}!`;

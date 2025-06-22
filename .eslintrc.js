@@ -85,5 +85,12 @@ module.exports = {
         project: undefined,
       },
     },
+    {
+      files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts'],
+      rules: {
+        'node/no-unpublished-import': 'off', // Allow test framework imports
+        'no-console': 'off', // Allow console in tests
+      },
+    },
   ],
 };

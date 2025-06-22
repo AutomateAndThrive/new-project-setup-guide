@@ -3,6 +3,9 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  testPathIgnorePatterns: [
+    '/src/.*\\.test\\.ts$', // Exclude Vitest files from Jest
+  ],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
