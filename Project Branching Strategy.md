@@ -75,9 +75,9 @@ Our branching strategy follows a **Git Flow** approach, adapted for the specific
 1. **Start Feature Development**
    ```bash
    # Ensure develop is up to date
-   git checkout develop
+   git checkout develop  
    git pull origin develop
-   
+
    # Create feature branch
    git checkout -b feature/AI-001-design-analysis
    ```
@@ -132,8 +132,8 @@ Our branching strategy follows a **Git Flow** approach, adapted for the specific
 
 1. **Create Release Branch**
    ```bash
-   git checkout develop
-   git pull origin develop
+   git checkout develop  
+   git pull origin develop  
    git checkout -b release/v1.1.0
    ```
 

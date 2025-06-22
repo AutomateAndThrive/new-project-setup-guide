@@ -176,7 +176,7 @@ def main():
                     body=body,
                     labels=labels
                 )
-                
+
                 if issue:
                     created_issues.append({
                         'id': task_id,
@@ -213,7 +213,7 @@ def main():
             print(f"\n❌ Failed Issues:")
             for issue in failed_issues:
                 print(f"  {issue['id']}: {issue['title']}")
-    
+
     print(f"\n🎉 Issue creation complete!")
 
 
