@@ -7,6 +7,8 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3.3-blue.svg)](https://www.typescriptlang.org/)
 
+<!-- CI/CD Test: This comment validates our automated quality gates -->
+
 A comprehensive toolkit for solo developers and small teams to initialize new software projects with **enforced best practices**, automated quality gates, and complete developer onboarding documentation.
 
 This repository provides everything you need to bootstrap a new project with proper structure, **automated enforcement**, and workflows that scale from solo development to small teams.
