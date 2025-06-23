@@ -1,5 +1,12 @@
 # **New Project Setup Guide**
 
+[![CI/CD Pipeline](https://github.com/AutomateAndThrive/new-project-setup-guide/workflows/CI/badge.svg)](https://github.com/AutomateAndThrive/new-project-setup-guide/actions)
+[![Test Coverage](https://codecov.io/gh/AutomateAndThrive/new-project-setup-guide/branch/main/graph/badge.svg)](https://codecov.io/gh/AutomateAndThrive/new-project-setup-guide)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A%2B-4CAF50.svg)](https://github.com/AutomateAndThrive/new-project-setup-guide)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3.3-blue.svg)](https://www.typescriptlang.org/)
+
 A comprehensive toolkit for solo developers and small teams to initialize new software projects with **enforced best practices**, automated quality gates, and complete developer onboarding documentation.
 
 This repository provides everything you need to bootstrap a new project with proper structure, **automated enforcement**, and workflows that scale from solo development to small teams.
@@ -136,3 +143,71 @@ All templates and guides are designed to be easily customized for your specific 
 - **Consistent Code Quality** - Pre-commit hooks ensure standards
 - **Fast Onboarding** - New developers productive in < 1 hour
 - **Reliable Deployments** - Automated testing prevents broken releases
+
+## **❓ Frequently Asked Questions (FAQ)**
+
+### **General Questions**
+
+**Q: What makes this different from other project templates?**
+A: This template focuses on **enforcement over complexity**. It automatically prevents technical debt accumulation through pre-commit hooks, enforces code quality standards, and provides comprehensive documentation that actually gets used.
+
+**Q: Is this suitable for large teams?**
+A: This template is optimized for **solo developers and small teams** (1-10 developers). For larger teams, you may want to add additional governance and approval workflows.
+
+**Q: Can I customize the tech stack?**
+A: Yes! The `init_project.sh` script supports multiple frontend frameworks (React, Vue, Angular, Next.js), backend frameworks (Node.js, Python, .NET, Java), and databases (PostgreSQL, MySQL, MongoDB, SQLite).
+
+### **Setup & Configuration**
+
+**Q: How long does initial setup take?**
+A: Running `./init_project.sh` takes about 2-3 minutes. Complete setup including environment configuration typically takes 15-30 minutes for a new developer.
+
+**Q: What if I don't want all the enforcement tools?**
+A: You can selectively disable tools by modifying the configuration files, but we recommend keeping them as they prevent common issues and maintain code quality.
+
+**Q: How do I update the project template?**
+A: Clone this repository, make your customizations, and use it as your new template. The template itself is version controlled and can be updated over time.
+
+### **Development Workflow**
+
+**Q: What happens if I try to commit bad code?**
+A: Pre-commit hooks will automatically block the commit and show you what needs to be fixed. This includes linting errors, formatting issues, and failing tests.
+
+**Q: How do I handle hotfixes?**
+A: Follow the hotfix workflow in the Project Branching Strategy guide. Create a hotfix branch from main, make your changes, and create a PR that will be fast-tracked.
+
+**Q: What if the CI pipeline fails?**
+A: The CI pipeline will show you exactly what failed. Fix the issues locally, push your changes, and the pipeline will re-run automatically.
+
+### **Quality & Standards**
+
+**Q: Why is 80% test coverage required?**
+A: 80% coverage provides a good balance between thorough testing and development speed. It catches most bugs while not being overly burdensome.
+
+**Q: How do I add new dependencies?**
+A: Use `npm install` as usual. Dependabot will automatically create PRs for security updates, and the CI pipeline will test compatibility.
+
+**Q: What if I need to bypass a pre-commit hook?**
+A: Use `git commit --no-verify` (not recommended) or fix the underlying issue. The hooks are there to prevent problems, not create them.
+
+### **Troubleshooting**
+
+**Q: Husky hooks aren't working after cloning**
+A: Run `npm install` and then `npm run prepare` to set up the Git hooks properly.
+
+**Q: Tests are failing locally but passing in CI**
+A: Check that you're using the same Node.js version and that all dependencies are installed. Run `npm ci` to ensure exact dependency versions.
+
+**Q: TypeScript errors in VS Code but not in terminal**
+A: Restart the TypeScript language server in VS Code (Cmd+Shift+P → "TypeScript: Restart TS Server").
+
+### **Getting Help**
+
+**Q: Where can I find more detailed documentation?**
+A: Check the `docs/` directory for comprehensive guides on development, API documentation, and project management.
+
+**Q: How do I contribute to this template?**
+A: Fork the repository, make your improvements, and submit a pull request. We welcome contributions that improve the developer experience.
+
+**Q: What if I find a bug or have a feature request?**
+A: Please create an issue on GitHub with a clear description of the problem or feature request.
