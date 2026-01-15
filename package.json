@@ -1,88 +1,20 @@
 {
-  "name": "new-project-setup-guide",
+  "name": "development-best-practices-guide",
   "version": "1.0.0",
-  "description": "A comprehensive toolkit for solo developers and small teams to initialize new software projects with enforced best practices and automated quality gates",
-  "main": "index.js",
+  "description": "A curated collection of best practices documentation, configuration examples, and templates for professional software projects",
   "scripts": {
-    "dev": "echo 'Development server not configured yet' && exit 0",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:vitest": "vitest run",
-    "test:vitest:watch": "vitest",
-    "test:vitest:coverage": "vitest run --coverage",
-    "test-setup": "node scripts/test-setup.js",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "prepare": "husky install",
-    "lint-staged": "lint-staged",
-    "docker:dev": "docker-compose up",
-    "docker:dev:build": "docker-compose up --build",
-    "docker:build": "docker build -f Dockerfile.dev -t app:dev .",
-    "docker:clean": "docker-compose down -v",
-    "validate": "npm run lint && npm run format:check && npm test && npm run test:vitest",
-    "validate:env": "node scripts/validate-env.js",
-    "ci:test": "npm run test:coverage && npm run test:vitest:coverage",
-    "ci:lint": "npm run lint && npm run format:check",
-    "ci:build": "npm run build",
-    "ci:security": "npm audit --audit-level=moderate",
-    "ci:full": "npm run ci:lint && npm run ci:test && npm run ci:build && npm run ci:security",
-    "docs:generate": "typedoc",
-    "docs:serve": "typedoc --serve",
-    "docs:watch": "typedoc --watch"
+    "format:check": "prettier --check ."
   },
   "keywords": [
-    "project-setup",
-    "boilerplate",
-    "enforcement",
-    "quality-gates",
-    "automation"
+    "best-practices",
+    "documentation",
+    "templates",
+    "project-setup"
   ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@commitlint/cli": "^18.4.3",
-    "@commitlint/config-conventional": "^18.4.3",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^20.12.12",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-node": "^11.1.0",
-    "husky": "^8.0.3",
-    "jest": "^30.0.2",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.2.5",
-    "snyk": "^1.1260.0",
-    "ts-jest": "^29.4.0",
-    "typedoc": "^0.28.5",
-    "typedoc-plugin-markdown": "^4.7.0",
-    "typescript": "5.3.3",
-    "vitest": "^3.2.4"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "npm run lint",
-      "npm run format"
-    ],
-    "*.{md,json,yml,yaml}": [
-      "npm run format"
-    ]
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
+    "prettier": "^3.2.5"
   }
 }
