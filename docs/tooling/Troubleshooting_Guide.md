@@ -56,13 +56,11 @@ npm run test -- --clearCache
 **Solutions:**
 
 1. **Restart TypeScript Language Server:**
-
    - `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
    - Type "TypeScript: Restart TS Server"
    - Press Enter
 
 2. **Reload VS Code Window:**
-
    - `Cmd+Shift+P` → "Developer: Reload Window"
 
 3. **Check TypeScript Version:**

@@ -5,7 +5,6 @@
 ### Pre-Submission Checklist
 
 - [ ] **Code Quality**
-
   - [ ] Code follows project coding standards
   - [ ] ESLint passes with no errors or warnings
   - [ ] Prettier formatting applied
@@ -13,14 +12,12 @@
   - [ ] No console.log statements left in production code
 
 - [ ] **Testing**
-
   - [ ] Unit tests written and passing
   - [ ] Integration tests updated if needed
   - [ ] Test coverage meets 80% minimum requirement
   - [ ] All existing tests still pass
 
 - [ ] **Documentation**
-
   - [ ] Code is self-documenting with clear variable/function names
   - [ ] Complex logic has inline comments
   - [ ] README updated if needed

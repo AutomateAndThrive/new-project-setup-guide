@@ -130,7 +130,6 @@ gitGraph
    ```
 
 3. **Create Pull Request**
-
    - Create PR from `feature/AI-001-design-analysis` to `develop`
    - Add appropriate labels and assignees
    - Request code review

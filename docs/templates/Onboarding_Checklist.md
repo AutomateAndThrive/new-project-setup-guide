@@ -7,14 +7,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Account Setup
 
 - [ ] **GitHub Account**
-
   - [ ] Create GitHub account (if not exists)
   - [ ] Request access to the repository
   - [ ] Set up SSH keys for Git access
   - [ ] Configure Git with your name and email
 
 - [ ] **Development Environment**
-
   - [ ] Install Node.js 18+ from [nodejs.org](https://nodejs.org/)
   - [ ] Install Git from [git-scm.com](https://git-scm.com/)
   - [ ] Install VS Code from [code.visualstudio.com](https://code.visualstudio.com/)
@@ -60,7 +58,6 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Documentation Review
 
 - [ ] **Read Core Documentation**
-
   - [ ] [README.md](../README.md) - Project overview
   - [ ] [New Developer Onboarding Guide](../New%20Developer%20Onboarding%20Guide.md) - Complete guide
   - [ ] [Project Branching Strategy](../Project%20Branching%20Strategy.md) - Git workflow
@@ -76,14 +73,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Codebase Exploration
 
 - [ ] **Project Structure**
-
   - [ ] Explore `src/` directory structure
   - [ ] Understand `test/` organization
   - [ ] Review `docs/` documentation
   - [ ] Check `scripts/` utility files
 
 - [ ] **Key Files Review**
-
   - [ ] `package.json` - Dependencies and scripts
   - [ ] `tsconfig.json` - TypeScript configuration
   - [ ] `.eslintrc.js` - Linting rules
@@ -132,7 +127,6 @@ This checklist ensures new developers complete all necessary setup and training 
   ```
 
 - [ ] **Make a Small Change**
-
   - [ ] Add a comment to an existing file
   - [ ] Update documentation
   - [ ] Add a simple test
@@ -154,7 +148,6 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Development Workflow
 
 - [ ] **Local Development**
-
   - [ ] Make changes and test locally
   - [ ] Run quality checks before committing
   - [ ] Use conventional commit messages
@@ -171,14 +164,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Architecture Understanding
 
 - [ ] **Frontend Architecture**
-
   - [ ] Understand React component structure
   - [ ] Learn about custom hooks
   - [ ] Review service layer patterns
   - [ ] Study state management
 
 - [ ] **Backend Architecture**
-
   - [ ] Understand Express.js structure
   - [ ] Learn about controllers and services
   - [ ] Review database models
@@ -193,14 +184,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Tool Proficiency
 
 - [ ] **Development Tools**
-
   - [ ] VS Code extensions and shortcuts
   - [ ] Git commands and workflows
   - [ ] Docker usage and commands
   - [ ] npm scripts and package management
 
 - [ ] **Quality Tools**
-
   - [ ] ESLint configuration and rules
   - [ ] Prettier formatting
   - [ ] TypeScript strict mode
@@ -217,14 +206,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### First Real Task
 
 - [ ] **Task Selection**
-
   - [ ] Pick a simple bug fix or small feature
   - [ ] Understand the requirements
   - [ ] Plan your approach
   - [ ] Estimate time needed
 
 - [ ] **Implementation**
-
   - [ ] Follow the development workflow
   - [ ] Write tests for your changes
   - [ ] Update documentation if needed
@@ -239,7 +226,6 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Knowledge Sharing
 
 - [ ] **Documentation Updates**
-
   - [ ] Update any outdated documentation
   - [ ] Add missing information
   - [ ] Improve existing guides
@@ -256,7 +242,6 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Daily Tasks
 
 - [ ] **Code Quality**
-
   - [ ] Run tests before committing
   - [ ] Ensure linting passes
   - [ ] Maintain code coverage
@@ -271,7 +256,6 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Weekly Tasks
 
 - [ ] **Learning**
-
   - [ ] Review new documentation
   - [ ] Learn new tools or techniques
   - [ ] Stay updated with project changes
@@ -288,14 +272,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### When You Need Help
 
 - [ ] **Documentation**
-
   - [ ] Check this onboarding guide
   - [ ] Review project documentation
   - [ ] Search GitHub issues
   - [ ] Check external resources
 
 - [ ] **Team Support**
-
   - [ ] Ask questions in team chat
   - [ ] Request code reviews
   - [ ] Schedule pair programming
@@ -312,14 +294,12 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Ready for Independent Work
 
 - [ ] **Technical Proficiency**
-
   - [ ] Can set up development environment independently
   - [ ] Understands project architecture
   - [ ] Can write and run tests
   - [ ] Follows coding standards
 
 - [ ] **Process Understanding**
-
   - [ ] Knows Git workflow
   - [ ] Understands CI/CD pipeline
   - [ ] Can create and review PRs
@@ -334,7 +314,6 @@ This checklist ensures new developers complete all necessary setup and training 
 ### Success Metrics
 
 - [ ] **Productivity**
-
   - [ ] Can complete tasks independently
   - [ ] Maintains code quality
   - [ ] Meets deadlines

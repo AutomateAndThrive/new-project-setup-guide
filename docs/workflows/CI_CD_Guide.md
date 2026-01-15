@@ -81,13 +81,11 @@ Our CI/CD pipeline is designed to enforce quality standards automatically while 
 The following checks must pass before merging:
 
 1. **Quality Checks** ✅
-
    - ESLint passes
    - Prettier formatting applied
    - TypeScript compilation successful
 
 2. **Testing & Coverage** ✅
-
    - All tests pass
    - 80% minimum coverage achieved
    - Coverage reports generated

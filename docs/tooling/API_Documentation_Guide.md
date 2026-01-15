@@ -245,19 +245,16 @@ export interface ApiOptions {
 ### Writing Good Documentation
 
 1. **Be Clear and Concise**
-
    - Use simple, direct language
    - Avoid jargon unless necessary
    - Focus on what the code does, not how it does it
 
 2. **Include Examples**
-
    - Provide realistic usage examples
    - Show both simple and complex use cases
    - Include error handling examples
 
 3. **Document Edge Cases**
-
    - Explain what happens with invalid input
    - Document performance considerations
    - Note any limitations or constraints
@@ -349,12 +346,10 @@ npm run docs:generate
 ### Common Issues
 
 1. **Missing Documentation**
-
    - Export public APIs without JSDoc comments
    - Solution: Add comprehensive JSDoc documentation
 
 2. **Broken Links**
-
    - References to non-existent types or functions
    - Solution: Update links or fix type references
 
